@@ -18,21 +18,26 @@ for (const viewport of desktopViewports) {
     const metrics = await page.evaluate(() => ({
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
+      clientWidth: document.documentElement.clientWidth,
+      clientHeight: document.documentElement.clientHeight,
       documentWidth: document.documentElement.scrollWidth,
       documentHeight: document.documentElement.scrollHeight,
       bodyWidth: document.body.scrollWidth,
       bodyHeight: document.body.scrollHeight
     }));
 
-    expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.innerWidth);
-    expect(metrics.documentHeight).toBeLessThanOrEqual(metrics.innerHeight);
-    expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.innerWidth);
-    expect(metrics.bodyHeight).toBeLessThanOrEqual(metrics.innerHeight);
+    // `clientWidth/clientHeight` are the actual CSS layout viewport. WebKit can
+    // reserve a scrollbar gutter inside `innerWidth` even when the page itself
+    // has no scrollable overflow, so compare scrolling dimensions to client size.
+    expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.clientWidth);
+    expect(metrics.documentHeight).toBeLessThanOrEqual(metrics.clientHeight);
+    expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.clientWidth);
+    expect(metrics.bodyHeight).toBeLessThanOrEqual(metrics.clientHeight);
 
     const heroBox = await hero.boundingBox();
     expect(heroBox).not.toBeNull();
-    expect(Math.abs((heroBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(1);
-    expect(Math.abs((heroBox?.height ?? 0) - viewport.height)).toBeLessThanOrEqual(1);
+    expect(Math.abs((heroBox?.width ?? 0) - metrics.clientWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs((heroBox?.height ?? 0) - metrics.clientHeight)).toBeLessThanOrEqual(1);
 
     await page.screenshot({
       path: testInfo.outputPath(`hero-${viewport.width}x${viewport.height}.png`),

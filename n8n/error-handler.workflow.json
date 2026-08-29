@@ -1,0 +1,48 @@
+{
+  "name": "Code à Cuisine - Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Catch workflow error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-260, 0],
+      "notes": "Receives unhandled errors from production workflows."
+    },
+    {
+      "parameters": {
+        "jsCode": "const execution = $json.execution ?? {};\nconst workflow = $json.workflow ?? {};\nreturn [{ json: { subject: `[Code à Cuisine] n8n error: ${workflow.name ?? 'workflow'}`, message: JSON.stringify({ workflow, execution }, null, 2), occurredAt: new Date().toISOString() } }];"
+      },
+      "id": "format-error",
+      "name": "Format error log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-20, 0],
+      "notes": "Create a concise, structured error payload. Avoid logging secrets or full credentials."
+    },
+    {
+      "parameters": {
+        "jsCode": "/* Add an Email Send / Gmail / Slack node here after configuring a credential and recipient. Keeping recipient data out of Git prevents accidental disclosure. */\nconsole.error($json.subject, $json.message);\nreturn items;"
+      },
+      "id": "notify-error",
+      "name": "Log and notify maintainer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "notes": "Replace or extend with an email notification node in the deployed n8n instance."
+    }
+  ],
+  "connections": {
+    "Catch workflow error": { "main": [[{ "node": "Format error log", "type": "main", "index": 0 }]] },
+    "Format error log": { "main": [[{ "node": "Log and notify maintainer", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all"
+  },
+  "versionId": "00000000-0000-4000-8000-000000000002",
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}

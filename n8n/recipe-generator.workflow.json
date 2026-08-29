@@ -1,0 +1,118 @@
+{
+  "name": "Code à Cuisine - Recipe Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "code-a-cuisine/generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-recipe-generator",
+      "name": "Receive generation request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-760, 0],
+      "notes": "Public Angular endpoint. Configure trusted proxy headers so requester IP can be derived server-side."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst allowedUnits = new Set(['g','kg','ml','l','piece','tbsp','tsp']);\nconst allowedTimes = new Set(['quick','medium','complex']);\nconst allowedCuisines = new Set(['German','Italian','Japanese','Indian','Gourmet','Fusion']);\nconst allowedDiets = new Set(['Vegetarian','Vegan','Keto','None']);\n\nif (!Array.isArray(body.ingredients) || body.ingredients.length < 1) throw new Error('INVALID_INPUT: at least one ingredient is required');\nfor (const ingredient of body.ingredients) {\n  if (typeof ingredient.name !== 'string' || !ingredient.name.trim()) throw new Error('INVALID_INPUT: ingredient name');\n  if (!Number.isFinite(Number(ingredient.quantity)) || Number(ingredient.quantity) <= 0) throw new Error('INVALID_INPUT: ingredient quantity');\n  if (!allowedUnits.has(ingredient.unit)) throw new Error('INVALID_INPUT: ingredient unit');\n}\nconst p = body.preferences ?? {};\nif (!Number.isInteger(p.portions) || p.portions < 1 || p.portions > 12) throw new Error('INVALID_INPUT: portions');\nif (!Number.isInteger(p.cookingPeople) || p.cookingPeople < 1 || p.cookingPeople > 3) throw new Error('INVALID_INPUT: cookingPeople');\nif (!allowedTimes.has(p.timeCategory)) throw new Error('INVALID_INPUT: timeCategory');\nif (!allowedCuisines.has(p.cuisine)) throw new Error('INVALID_INPUT: cuisine');\nif (!allowedDiets.has(p.diet)) throw new Error('INVALID_INPUT: diet');\n\nreturn [{ json: { request: body, receivedAt: new Date().toISOString(), quotaPolicy: { perIpPerDay: 3, systemPerDay: 12 } } }];"
+      },
+      "id": "validate-request",
+      "name": "Validate and normalize input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "notes": "Authoritative validation. Keep this before all paid AI operations."
+    },
+    {
+      "parameters": {
+        "jsCode": "/* REQUIRED BEFORE PRODUCTION: resolve trusted requester IP, normalize IPv4/IPv6, read Firestore daily counters, reject at 3/IP or 12/system, and reserve/increment quota atomically. This scaffold passes through during local UI development because Firebase credentials are deployment-specific. */\nreturn items;"
+      },
+      "id": "quota-guard",
+      "name": "Enforce daily quota",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-280, 0],
+      "notes": "Production gate: 3 generations per requester IP/day and 12 system-wide/day. Replace pass-through with Firestore-backed atomic counters."
+    },
+    {
+      "parameters": {
+        "jsCode": "const { request } = $json;\nconst ingredients = request.ingredients.map(i => `${i.quantity}${i.unit} ${i.name}`).join(', ');\nconst prompt = `Return ONLY valid JSON with a top-level recipes array containing exactly 3 recipes. Each must use at least 70% of supplied ingredients and at most 3 extra base ingredients. Include title, cuisine, diet, cookingTimeMinutes, portions, usedIngredientRatio, missingIngredients, ingredients, nutritionPerPortion {calories,proteinG,carbsG,fatG}, and chronological steps {order,title,instruction,cook,parallelGroup?}. Preferences: ${JSON.stringify(request.preferences)}. Ingredients: ${ingredients}.`;\nreturn [{ json: { ...$json, aiPrompt: prompt } }];"
+      },
+      "id": "build-ai-prompt",
+      "name": "Build constrained AI prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-40, 0],
+      "notes": "Use this output with a credential-backed AI node. Do not expose provider credentials to Angular."
+    },
+    {
+      "parameters": {
+        "jsCode": "/* Replace this development stub with your credential-backed AI node. */\nconst request = $json.request;\nconst base = { cuisine: request.preferences.cuisine, diet: request.preferences.diet, cookingTimeMinutes: request.preferences.timeCategory === 'quick' ? 20 : request.preferences.timeCategory === 'medium' ? 35 : 60, portions: request.preferences.portions, usedIngredientRatio: 1, missingIngredients: [], ingredients: request.ingredients.map(i => ({...i, suppliedByUser: true})), nutritionPerPortion: { calories: 500, proteinG: 20, carbsG: 55, fatG: 18 }, steps: [{ order: 1, title: 'Prepare ingredients', instruction: 'Prepare and measure all ingredients before cooking.', cook: 1 }, { order: 2, title: 'Cook', instruction: 'Cook the ingredients using the selected cuisine style and season to taste.', cook: Math.min(2, request.preferences.cookingPeople) }] };\nconst recipes = ['Pantry skillet', 'Kitchen bowl', 'Quick bake'].map((title, index) => ({ ...base, title: `${title} ${index + 1}` }));\nreturn [{ json: { request, recipes } }];"
+      },
+      "id": "ai-provider",
+      "name": "Generate 3 recipes - DEV STUB",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 0],
+      "notes": "Development-only mock. Replace with an AI node or credential-backed HTTP Request before production."
+    },
+    {
+      "parameters": {
+        "jsCode": "const recipes = $json.recipes;\nif (!Array.isArray(recipes) || recipes.length !== 3) throw new Error('AI_PROVIDER_ERROR: workflow must produce exactly 3 recipes');\nfor (const recipe of recipes) {\n  if (Number(recipe.usedIngredientRatio) < 0.7) throw new Error('AI_PROVIDER_ERROR: recipe uses less than 70% of user ingredients');\n  if (!Array.isArray(recipe.missingIngredients) || recipe.missingIngredients.length > 3) throw new Error('AI_PROVIDER_ERROR: too many missing ingredients');\n  if (!Array.isArray(recipe.steps) || recipe.steps.length < 1) throw new Error('AI_PROVIDER_ERROR: missing directions');\n}\nreturn items;"
+      },
+      "id": "validate-ai-output",
+      "name": "Validate AI recipe output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "notes": "Reject malformed or constraint-breaking AI output before persistence."
+    },
+    {
+      "parameters": {
+        "jsCode": "/* REQUIRED BEFORE PRODUCTION: persist each normalized recipe in Firestore and attach its document id. Use a Google Cloud/Firebase credential stored in n8n, never in this JSON export. */\nreturn items;"
+      },
+      "id": "persist-firestore",
+      "name": "Persist recipes in Firestore",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 0],
+      "notes": "Replace with Firestore node(s) or an authenticated backend request. Browser-side writes are denied by Firestore rules."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { recipes: $json.recipes, quota: { remainingForIp: 2, remainingSystemWide: 11, resetsAt: new Date(new Date().setHours(24,0,0,0)).toISOString() } } }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-success",
+      "name": "Return normalized response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [920, 0],
+      "notes": "Return only the public response contract to Angular."
+    }
+  ],
+  "connections": {
+    "Receive generation request": { "main": [[{ "node": "Validate and normalize input", "type": "main", "index": 0 }]] },
+    "Validate and normalize input": { "main": [[{ "node": "Enforce daily quota", "type": "main", "index": 0 }]] },
+    "Enforce daily quota": { "main": [[{ "node": "Build constrained AI prompt", "type": "main", "index": 0 }]] },
+    "Build constrained AI prompt": { "main": [[{ "node": "Generate 3 recipes - DEV STUB", "type": "main", "index": 0 }]] },
+    "Generate 3 recipes - DEV STUB": { "main": [[{ "node": "Validate AI recipe output", "type": "main", "index": 0 }]] },
+    "Validate AI recipe output": { "main": [[{ "node": "Persist recipes in Firestore", "type": "main", "index": 0 }]] },
+    "Persist recipes in Firestore": { "main": [[{ "node": "Return normalized response", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  },
+  "versionId": "00000000-0000-4000-8000-000000000001",
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}

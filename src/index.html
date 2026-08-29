@@ -8,6 +8,18 @@
     <meta name="description" content="AI-powered recipe ideas based on ingredients you already have.">
     <meta name="theme-color" content="#396039">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+      /* Critical reset: remove the browser's default 8px body margin before
+         Angular/global styles load. This prevents transient viewport offsets
+         in WebKit visual tests and avoids a first-paint layout shift. */
+      html,
+      body {
+        width: 100%;
+        min-width: 320px;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600&family=Ubuntu:wght@700&display=swap" rel="stylesheet">

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -7,33 +7,35 @@ import { RouterLink } from '@angular/router';
   template: `
     <main class="home">
       <section class="hero" aria-labelledby="hero-title">
-        <a routerLink="/" class="hero__brand" aria-label="Code à Cuisine home">
-          <img class="hero__brand-mark" [src]="assets.logoMark" alt="" />
-          <img class="hero__brand-wordmark" [src]="assets.logoWordmark" alt="Code à Cuisine" />
-        </a>
-
-        <div class="hero__copy">
-          <div class="hero__heading">
-            <p class="eyebrow">AI-Powered recipe generator</p>
-            <h1 id="hero-title">Code à Cuisine</h1>
-          </div>
-          <a class="button button--cream" routerLink="/generate">Get started</a>
-        </div>
-
-        <div class="hero__visuals" aria-hidden="true">
-          <img class="hero__plate hero__plate--top" [src]="assets.topPlate" alt="" />
-          <img class="hero__plate hero__plate--middle" [src]="assets.middlePlate" alt="" />
-          <div class="hero__plate-bottom-frame">
-            <img class="hero__plate hero__plate--bottom" [src]="assets.bottomPlate" alt="" />
-          </div>
-        </div>
-
-        <div class="hero__secondary">
-          <strong>Hungry for inspiration?</strong>
-          <a class="hero__cookbook-link" routerLink="/cookbook">
-            <span>Go to cookbook</span>
-            <img [src]="assets.arrow" alt="" aria-hidden="true" />
+        <div class="hero__canvas" [style.transform]="'scale(' + heroScale() + ')'">
+          <a routerLink="/" class="hero__brand" aria-label="Code à Cuisine home">
+            <img class="hero__brand-mark" [src]="assets.logoMark" alt="" />
+            <img class="hero__brand-wordmark" [src]="assets.logoWordmark" alt="Code à Cuisine" />
           </a>
+
+          <div class="hero__copy">
+            <div class="hero__heading">
+              <p class="eyebrow">AI-Powered recipe generator</p>
+              <h1 id="hero-title">Code à Cuisine</h1>
+            </div>
+            <a class="button button--cream" routerLink="/generate">Get started</a>
+          </div>
+
+          <div class="hero__visuals" aria-hidden="true">
+            <img class="hero__plate hero__plate--top" [src]="assets.topPlate" alt="" />
+            <img class="hero__plate hero__plate--middle" [src]="assets.middlePlate" alt="" />
+            <div class="hero__plate-bottom-frame">
+              <img class="hero__plate hero__plate--bottom" [src]="assets.bottomPlate" alt="" />
+            </div>
+          </div>
+
+          <div class="hero__secondary">
+            <strong>Hungry for inspiration?</strong>
+            <a class="hero__cookbook-link" routerLink="/cookbook">
+              <span>Go to cookbook</span>
+              <img [src]="assets.arrow" alt="" aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </section>
     </main>
@@ -41,10 +43,14 @@ import { RouterLink } from '@angular/router';
   styles: `
     :host {
       display: block;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
     }
 
     .home {
-      min-height: 100dvh;
+      width: 100%;
+      height: 100dvh;
       background: var(--olive);
       color: var(--cream);
       overflow: hidden;
@@ -52,9 +58,20 @@ import { RouterLink } from '@angular/router';
 
     .hero {
       position: relative;
-      width: min(100%, 1440px);
+      display: flex;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      align-items: flex-start;
+      overflow: hidden;
+    }
+
+    .hero__canvas {
+      position: relative;
+      flex: 0 0 auto;
+      width: 1440px;
       height: 1024px;
-      margin-inline: auto;
+      transform-origin: top center;
       overflow: hidden;
     }
 
@@ -232,49 +249,11 @@ import { RouterLink } from '@angular/router';
       object-fit: contain;
     }
 
-    @media (max-width: 1100px) {
-      .hero {
-        height: 900px;
-      }
-
-      .hero__brand {
-        top: 30px;
-        left: 40px;
-      }
-
-      .hero__copy {
-        top: 205px;
-        left: 40px;
-        width: min(680px, 66vw);
-      }
-
-      .eyebrow {
-        font-size: clamp(32px, 4vw, 44px);
-      }
-
-      h1 {
-        width: auto;
-        font-size: clamp(72px, 8vw, 92px);
-      }
-
-      .hero__visuals {
-        top: -28px;
-        left: 69vw;
-        transform: scale(.82);
-        transform-origin: top left;
-      }
-
-      .hero__secondary {
-        top: auto;
-        bottom: 54px;
-        left: 40px;
-      }
-    }
-
     @media (max-width: 700px) {
-      .hero {
-        min-height: 760px;
-        height: 100dvh;
+      .hero__canvas {
+        width: 100%;
+        height: 100%;
+        transform: none !important;
       }
 
       .hero__brand {
@@ -314,9 +293,11 @@ import { RouterLink } from '@angular/router';
         top: 68px;
         left: 65%;
         transform: scale(.52);
+        transform-origin: top left;
       }
 
       .hero__secondary {
+        top: auto;
         right: 20px;
         bottom: 32px;
         left: 20px;
@@ -340,6 +321,8 @@ import { RouterLink } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent {
+  readonly heroScale = signal(1);
+
   readonly assets = {
     topPlate: 'https://www.figma.com/api/mcp/asset/a7f2614a-df36-4c20-a11c-b96ed0700242.png',
     middlePlate: 'https://www.figma.com/api/mcp/asset/70778520-c0e9-443e-9ec6-18722ba9cc9a.png',
@@ -348,4 +331,20 @@ export class HomeComponent {
     logoMark: 'https://www.figma.com/api/mcp/asset/804625fa-92e9-4e9b-a6e6-5392e19d8326.svg',
     logoWordmark: 'https://www.figma.com/api/mcp/asset/9b0626c1-c676-4ac4-bab9-98439855af21.svg'
   } as const;
+
+  constructor() {
+    this.updateHeroScale();
+  }
+
+  @HostListener('window:resize')
+  updateHeroScale(): void {
+    if (typeof window === 'undefined' || window.innerWidth <= 700) {
+      this.heroScale.set(1);
+      return;
+    }
+
+    const widthScale = window.innerWidth / 1440;
+    const heightScale = window.innerHeight / 1024;
+    this.heroScale.set(Math.min(widthScale, heightScale));
+  }
 }

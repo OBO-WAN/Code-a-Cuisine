@@ -5,6 +5,11 @@
 /dist
 /.angular/cache
 
+# Playwright
+/playwright-report
+/test-results
+/blob-report
+
 # Firebase
 .firebase/
 firebase-debug.log

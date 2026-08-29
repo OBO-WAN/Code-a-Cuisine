@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Code à Cuisine</title>
+  <rect width="64" height="64" rx="14" fill="#396039"/>
+  <circle cx="23" cy="24" r="10" fill="#FAF0E6"/>
+  <circle cx="36" cy="20" r="10" fill="#FAF0E6"/>
+  <circle cx="40" cy="33" r="10" fill="#FAF0E6"/>
+  <path d="M31 30c-1 8 1 15 7 21h-9c-4-7-5-14-3-22z" fill="#FAF0E6"/>
+  <circle cx="45" cy="45" r="5" fill="#FAF0E6"/>
+</svg>

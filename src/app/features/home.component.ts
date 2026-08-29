@@ -42,28 +42,29 @@ import { RouterLink } from '@angular/router';
   `,
   styles: `
     :host {
+      position: fixed;
+      inset: 0;
       display: block;
+      overflow: hidden;
+    }
+
+    .home,
+    .hero {
       width: 100%;
-      height: 100dvh;
+      height: 100%;
       overflow: hidden;
     }
 
     .home {
-      width: 100%;
-      height: 100dvh;
       background: var(--olive);
       color: var(--cream);
-      overflow: hidden;
     }
 
     .hero {
       position: relative;
       display: flex;
-      width: 100%;
-      height: 100%;
       justify-content: center;
       align-items: flex-start;
-      overflow: hidden;
     }
 
     .hero__canvas {
@@ -338,13 +339,20 @@ export class HomeComponent {
 
   @HostListener('window:resize')
   updateHeroScale(): void {
-    if (typeof window === 'undefined' || window.innerWidth <= 700) {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const viewportWidth = document.documentElement.clientWidth;
+    const viewportHeight = document.documentElement.clientHeight;
+
+    if (viewportWidth <= 700) {
       this.heroScale.set(1);
       return;
     }
 
-    const widthScale = window.innerWidth / 1440;
-    const heightScale = window.innerHeight / 1024;
+    const widthScale = viewportWidth / 1440;
+    const heightScale = viewportHeight / 1024;
     this.heroScale.set(Math.min(widthScale, heightScale));
   }
 }

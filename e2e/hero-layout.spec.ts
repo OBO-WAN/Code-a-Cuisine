@@ -23,6 +23,9 @@ for (const viewport of desktopViewports) {
     const hero = page.locator('.hero');
     await expect(hero, `Angular page errors: ${pageErrors.join(' | ') || 'none'}`).toBeVisible({ timeout: 15_000 });
 
+    // First verify Playwright really created the requested browser viewport.
+    expect(page.viewportSize()).toEqual(viewport);
+
     const metrics = await page.evaluate(() => ({
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -34,22 +37,21 @@ for (const viewport of desktopViewports) {
       bodyHeight: document.body.scrollHeight
     }));
 
-    // Overflow is measured against the document's client box. Playwright's
-    // Linux WebKit build can report a 16px classic-scrollbar gutter between
-    // window.innerWidth and documentElement.clientWidth even when overflow is
-    // hidden. That gutter is browser chrome, not page overflow.
+    // The CSS layout viewport is documentElement.clientWidth/clientHeight.
+    // Playwright's Linux WebKit can reserve a 16px classic scrollbar gutter,
+    // so window.innerWidth may be larger even when the page has zero overflow.
     expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.clientWidth);
     expect(metrics.documentHeight).toBeLessThanOrEqual(metrics.clientHeight);
     expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.clientWidth);
     expect(metrics.bodyHeight).toBeLessThanOrEqual(metrics.clientHeight);
 
-    // A fixed, inset: 0 hero paints to the browser viewport. For WebKit this is
-    // represented by innerWidth/innerHeight, while clientWidth can be 16px less
-    // because of the reserved scrollbar gutter described above.
+    // The fixed hero must cover the entire CSS layout viewport and start at 0,0.
     const heroBox = await hero.boundingBox();
     expect(heroBox).not.toBeNull();
-    expect(Math.abs((heroBox?.width ?? 0) - metrics.innerWidth)).toBeLessThanOrEqual(1);
-    expect(Math.abs((heroBox?.height ?? 0) - metrics.innerHeight)).toBeLessThanOrEqual(1);
+    expect(Math.abs(heroBox?.x ?? 0)).toBeLessThanOrEqual(1);
+    expect(Math.abs(heroBox?.y ?? 0)).toBeLessThanOrEqual(1);
+    expect(Math.abs((heroBox?.width ?? 0) - metrics.clientWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs((heroBox?.height ?? 0) - metrics.clientHeight)).toBeLessThanOrEqual(1);
 
     await page.screenshot({
       path: testInfo.outputPath(`hero-${viewport.width}x${viewport.height}.png`),

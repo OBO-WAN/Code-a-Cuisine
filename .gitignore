@@ -1,0 +1,29 @@
+# dependencies
+/node_modules
+
+# Angular build
+/dist
+/.angular/cache
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# local environments / secrets
+.env
+.env.*
+!/.env.example
+src/environments/environment.local.ts
+
+# editors / OS
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# misc
+coverage/
+*.log

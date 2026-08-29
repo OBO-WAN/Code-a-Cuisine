@@ -1,0 +1,60 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --cream: #faf0e6;
+  --cream-soft: #f5f5dc;
+  --olive: #396039;
+  --green: #008000;
+  --middle-green: #1e5515;
+  --green-dark: #10310b;
+  --font-body: 'Quicksand', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Ubuntu', var(--font-body);
+  font-family: var(--font-body);
+  color: var(--green-dark);
+  background: #fff;
+  font-synthesis: none;
+}
+
+html {
+  min-width: 320px;
+  background: #fff;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100dvh;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  background: #fff;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 65%, white);
+  outline-offset: 3px;
+}
+
+@media (min-width: 1440px) {
+  body {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--olive) 7%, white), #fff 18% 82%, color-mix(in srgb, var(--olive) 7%, white));
+  }
+}

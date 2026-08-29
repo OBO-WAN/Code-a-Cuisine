@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "recipes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "cuisine",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

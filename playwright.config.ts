@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const e2eUrl = 'http://127.0.0.1:4300';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -16,14 +18,17 @@ export default defineConfig({
   ],
   outputDir: 'test-results',
   use: {
-    baseURL: 'http://127.0.0.1:4200',
+    baseURL: e2eUrl,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure'
   },
   webServer: {
-    command: 'npm start -- --host 127.0.0.1 --port 4200',
-    url: 'http://127.0.0.1:4200',
-    reuseExistingServer: !process.env['CI'],
+    // Keep Playwright isolated from the developer's normal `npm start` server on
+    // port 4200. Reusing that HMR-enabled server can reload WebKit while a test
+    // is measuring the page and destroy its JavaScript execution context.
+    command: 'npm start -- --host 127.0.0.1 --port 4300 --live-reload=false --hmr=false',
+    url: e2eUrl,
+    reuseExistingServer: false,
     timeout: 120_000
   },
   projects: [

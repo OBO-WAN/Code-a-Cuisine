@@ -9,11 +9,22 @@ const desktopViewports = [
 
 for (const viewport of desktopViewports) {
   test(`hero fits ${viewport.width}x${viewport.height} without scrollbars`, async ({ page }, testInfo) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', error => pageErrors.push(error.message));
+
     await page.setViewportSize(viewport);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
+    // WebKit can take a little longer than Chromium/Firefox to bootstrap the
+    // Angular dev bundle locally, especially while several browser processes
+    // are starting. Wait for Angular to populate app-root before asserting UI.
+    await page.waitForFunction(() => {
+      const root = document.querySelector('app-root');
+      return Boolean(root?.children.length);
+    }, undefined, { timeout: 15_000 });
+
     const hero = page.locator('.hero');
-    await expect(hero).toBeVisible();
+    await expect(hero, `Angular page errors: ${pageErrors.join(' | ') || 'none'}`).toBeVisible({ timeout: 15_000 });
 
     const metrics = await page.evaluate(() => ({
       innerWidth: window.innerWidth,

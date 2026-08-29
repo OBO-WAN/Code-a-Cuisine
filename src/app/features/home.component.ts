@@ -325,12 +325,12 @@ export class HomeComponent {
   readonly heroScale = signal(1);
 
   readonly assets = {
-    topPlate: 'https://www.figma.com/api/mcp/asset/a7f2614a-df36-4c20-a11c-b96ed0700242.png',
-    middlePlate: 'https://www.figma.com/api/mcp/asset/70778520-c0e9-443e-9ec6-18722ba9cc9a.png',
-    bottomPlate: 'https://www.figma.com/api/mcp/asset/e6d8c266-6430-4f25-9f79-05f8df7d8de5.png',
-    arrow: 'https://www.figma.com/api/mcp/asset/d20cd9b0-78a2-405b-9e04-f30635ea70a8.svg',
-    logoMark: 'https://www.figma.com/api/mcp/asset/804625fa-92e9-4e9b-a6e6-5392e19d8326.svg',
-    logoWordmark: 'https://www.figma.com/api/mcp/asset/9b0626c1-c676-4ac4-bab9-98439855af21.svg'
+    topPlate: '/assets/hero/plate-top.png',
+    middlePlate: '/assets/hero/plate-middle.png',
+    bottomPlate: '/assets/hero/plate-bottom.png',
+    arrow: '/assets/hero/arrow.svg',
+    logoMark: '/assets/hero/logo-mark.svg',
+    logoWordmark: '/assets/hero/logo-wordmark.svg'
   } as const;
 
   constructor() {

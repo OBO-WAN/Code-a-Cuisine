@@ -15,64 +15,103 @@ for (const viewport of desktopViewports) {
     await page.setViewportSize(viewport);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    await page.waitForFunction(() => {
-      const root = document.querySelector('app-root');
-      const hero = document.querySelector<HTMLElement>('.hero');
-      if (!root?.children.length || !hero) return false;
-
-      const bodyStyle = getComputedStyle(document.body);
-      const heroStyle = getComputedStyle(hero);
-
-      return bodyStyle.marginTop === '0px'
-        && bodyStyle.marginRight === '0px'
-        && bodyStyle.marginBottom === '0px'
-        && bodyStyle.marginLeft === '0px'
-        && heroStyle.overflowX === 'hidden'
-        && heroStyle.overflowY === 'hidden';
-    }, undefined, { timeout: 15_000 });
-
-    // Let WebKit finish one complete layout/paint cycle after styles are applied.
-    await page.evaluate(() => new Promise<void>(resolve => {
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-    }));
-
     const hero = page.locator('.hero');
     await expect(hero, `Angular page errors: ${pageErrors.join(' | ') || 'none'}`).toBeVisible({ timeout: 15_000 });
-
     expect(page.viewportSize()).toEqual(viewport);
 
-    const metrics = await page.evaluate(() => {
-      const heroElement = document.querySelector<HTMLElement>('.hero');
-      const heroRect = heroElement?.getBoundingClientRect();
-      const bodyStyle = getComputedStyle(document.body);
+    type Metrics = {
+      innerWidth: number;
+      innerHeight: number;
+      clientWidth: number;
+      clientHeight: number;
+      documentWidth: number;
+      documentHeight: number;
+      bodyWidth: number;
+      bodyHeight: number;
+      bodyMargin: string;
+      heroX: number;
+      heroY: number;
+      heroWidth: number;
+      heroHeight: number;
+      heroOverflowX: string;
+      heroOverflowY: string;
+    };
 
-      return {
-        innerWidth: window.innerWidth,
-        innerHeight: window.innerHeight,
-        clientWidth: document.documentElement.clientWidth,
-        clientHeight: document.documentElement.clientHeight,
-        documentWidth: document.documentElement.scrollWidth,
-        documentHeight: document.documentElement.scrollHeight,
-        bodyWidth: document.body.scrollWidth,
-        bodyHeight: document.body.scrollHeight,
-        bodyMargin: bodyStyle.margin,
-        heroX: heroRect?.x ?? Number.NaN,
-        heroY: heroRect?.y ?? Number.NaN,
-        heroWidth: heroRect?.width ?? Number.NaN,
-        heroHeight: heroRect?.height ?? Number.NaN
-      };
-    });
+    const readMetrics = async (): Promise<Metrics | null> => {
+      try {
+        return await page.evaluate(() => {
+          const heroElement = document.querySelector<HTMLElement>('.hero');
+          if (!heroElement) return null;
 
-    expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.clientWidth);
-    expect(metrics.documentHeight).toBeLessThanOrEqual(metrics.clientHeight);
-    expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.clientWidth);
-    expect(metrics.bodyHeight).toBeLessThanOrEqual(metrics.clientHeight);
+          const heroRect = heroElement.getBoundingClientRect();
+          const bodyStyle = getComputedStyle(document.body);
+          const heroStyle = getComputedStyle(heroElement);
 
-    const geometry = `body margin=${metrics.bodyMargin}; hero=${metrics.heroX},${metrics.heroY} ${metrics.heroWidth}x${metrics.heroHeight}; client=${metrics.clientWidth}x${metrics.clientHeight}; inner=${metrics.innerWidth}x${metrics.innerHeight}`;
-    expect(Math.abs(metrics.heroX), geometry).toBeLessThanOrEqual(1);
-    expect(Math.abs(metrics.heroY), geometry).toBeLessThanOrEqual(1);
-    expect(Math.abs(metrics.heroWidth - metrics.clientWidth), geometry).toBeLessThanOrEqual(1);
-    expect(Math.abs(metrics.heroHeight - metrics.clientHeight), geometry).toBeLessThanOrEqual(1);
+          return {
+            innerWidth: window.innerWidth,
+            innerHeight: window.innerHeight,
+            clientWidth: document.documentElement.clientWidth,
+            clientHeight: document.documentElement.clientHeight,
+            documentWidth: document.documentElement.scrollWidth,
+            documentHeight: document.documentElement.scrollHeight,
+            bodyWidth: document.body.scrollWidth,
+            bodyHeight: document.body.scrollHeight,
+            bodyMargin: bodyStyle.margin,
+            heroX: heroRect.x,
+            heroY: heroRect.y,
+            heroWidth: heroRect.width,
+            heroHeight: heroRect.height,
+            heroOverflowX: heroStyle.overflowX,
+            heroOverflowY: heroStyle.overflowY
+          };
+        });
+      } catch {
+        // A dev-server navigation can transiently destroy the page execution
+        // context. expect.poll retries instead of turning that into a false
+        // layout failure.
+        return null;
+      }
+    };
+
+    // Wait until Angular styles and the viewport geometry have settled. This is
+    // deliberately navigation-safe and does not depend on requestAnimationFrame
+    // running inside a page context that WebKit may replace during startup.
+    await expect.poll(async () => {
+      const metrics = await readMetrics();
+      if (!metrics) return false;
+
+      return metrics.bodyMargin === '0px'
+        && metrics.heroOverflowX === 'hidden'
+        && metrics.heroOverflowY === 'hidden'
+        && metrics.documentWidth <= metrics.clientWidth
+        && metrics.documentHeight <= metrics.clientHeight
+        && metrics.bodyWidth <= metrics.clientWidth
+        && metrics.bodyHeight <= metrics.clientHeight
+        && Math.abs(metrics.heroX) <= 1
+        && Math.abs(metrics.heroY) <= 1
+        && Math.abs(metrics.heroWidth - metrics.clientWidth) <= 1
+        && Math.abs(metrics.heroHeight - metrics.clientHeight) <= 1;
+    }, {
+      timeout: 15_000,
+      intervals: [100, 150, 250, 500],
+      message: `Hero never reached stable viewport geometry. Angular page errors: ${pageErrors.join(' | ') || 'none'}`
+    }).toBe(true);
+
+    const metrics = await readMetrics();
+    expect(metrics).not.toBeNull();
+
+    if (metrics) {
+      const geometry = `body margin=${metrics.bodyMargin}; hero=${metrics.heroX},${metrics.heroY} ${metrics.heroWidth}x${metrics.heroHeight}; client=${metrics.clientWidth}x${metrics.clientHeight}; inner=${metrics.innerWidth}x${metrics.innerHeight}`;
+
+      expect(metrics.documentWidth, geometry).toBeLessThanOrEqual(metrics.clientWidth);
+      expect(metrics.documentHeight, geometry).toBeLessThanOrEqual(metrics.clientHeight);
+      expect(metrics.bodyWidth, geometry).toBeLessThanOrEqual(metrics.clientWidth);
+      expect(metrics.bodyHeight, geometry).toBeLessThanOrEqual(metrics.clientHeight);
+      expect(Math.abs(metrics.heroX), geometry).toBeLessThanOrEqual(1);
+      expect(Math.abs(metrics.heroY), geometry).toBeLessThanOrEqual(1);
+      expect(Math.abs(metrics.heroWidth - metrics.clientWidth), geometry).toBeLessThanOrEqual(1);
+      expect(Math.abs(metrics.heroHeight - metrics.clientHeight), geometry).toBeLessThanOrEqual(1);
+    }
 
     await page.screenshot({
       path: testInfo.outputPath(`hero-${viewport.width}x${viewport.height}.png`),

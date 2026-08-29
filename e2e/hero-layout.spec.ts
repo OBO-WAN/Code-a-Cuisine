@@ -15,9 +15,6 @@ for (const viewport of desktopViewports) {
     await page.setViewportSize(viewport);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    // WebKit can take a little longer than Chromium/Firefox to bootstrap the
-    // Angular dev bundle locally, especially while several browser processes
-    // are starting. Wait for Angular to populate app-root before asserting UI.
     await page.waitForFunction(() => {
       const root = document.querySelector('app-root');
       return Boolean(root?.children.length);
@@ -37,18 +34,22 @@ for (const viewport of desktopViewports) {
       bodyHeight: document.body.scrollHeight
     }));
 
-    // `clientWidth/clientHeight` are the actual CSS layout viewport. WebKit can
-    // reserve a scrollbar gutter inside `innerWidth` even when the page itself
-    // has no scrollable overflow, so compare scrolling dimensions to client size.
+    // Overflow is measured against the document's client box. Playwright's
+    // Linux WebKit build can report a 16px classic-scrollbar gutter between
+    // window.innerWidth and documentElement.clientWidth even when overflow is
+    // hidden. That gutter is browser chrome, not page overflow.
     expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.clientWidth);
     expect(metrics.documentHeight).toBeLessThanOrEqual(metrics.clientHeight);
     expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.clientWidth);
     expect(metrics.bodyHeight).toBeLessThanOrEqual(metrics.clientHeight);
 
+    // A fixed, inset: 0 hero paints to the browser viewport. For WebKit this is
+    // represented by innerWidth/innerHeight, while clientWidth can be 16px less
+    // because of the reserved scrollbar gutter described above.
     const heroBox = await hero.boundingBox();
     expect(heroBox).not.toBeNull();
-    expect(Math.abs((heroBox?.width ?? 0) - metrics.clientWidth)).toBeLessThanOrEqual(1);
-    expect(Math.abs((heroBox?.height ?? 0) - metrics.clientHeight)).toBeLessThanOrEqual(1);
+    expect(Math.abs((heroBox?.width ?? 0) - metrics.innerWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs((heroBox?.height ?? 0) - metrics.innerHeight)).toBeLessThanOrEqual(1);
 
     await page.screenshot({
       path: testInfo.outputPath(`hero-${viewport.width}x${viewport.height}.png`),

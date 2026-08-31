@@ -61,67 +61,67 @@ select:focus-visible {
   outline-offset: 3px;
 }
 
-/* The Hero logo assets are cream because they sit on the green Hero. The
-   Cookbook reuses the exact same vector geometry on white, so use the SVGs as
-   masks and paint them in the Figma olive instead of duplicating logo files. */
-.cookbook-page .brand {
-  position: relative;
-}
+/* The mobile Cookbook uses deliberately cropped source photography in Figma,
+   not a generic object-fit: cover crop. Preserve those exact 320x260 crops so
+   details such as the Indian thali remain framed correctly. */
+@media (max-width: 620px) {
+  .cookbook-page .cuisine-card__image-wrap {
+    position: relative;
+  }
 
-.cookbook-page .brand__mark,
-.cookbook-page .brand__wordmark {
-  visibility: hidden !important;
-}
+  .cookbook-page .cuisine-card__image-wrap img {
+    position: absolute;
+    max-width: none;
+    object-fit: fill;
+  }
 
-.cookbook-page .brand::before,
-.cookbook-page .brand::after {
-  content: '';
-  position: absolute;
-  display: block;
-  background: var(--olive);
-}
+  .cookbook-page .cuisine-card:nth-child(1) .cuisine-card__image-wrap img {
+    width: 210.7%;
+    height: 134.3%;
+    left: -46.05%;
+    top: -2.51%;
+  }
 
-.cookbook-page .brand::before {
-  inset: 0 64.69% 0 0;
-  width: 35.31%;
-  height: 100%;
-  -webkit-mask: url('/assets/hero/logo-mark.svg') center / contain no-repeat;
-  mask: url('/assets/hero/logo-mark.svg') center / contain no-repeat;
-}
+  .cookbook-page .cuisine-card:nth-child(2) .cuisine-card__image-wrap img {
+    width: 210.7%;
+    height: 134.3%;
+    left: -49.72%;
+    top: -2.51%;
+  }
 
-.cookbook-page .brand::after {
-  top: 7.21%;
-  right: 0;
-  bottom: 1.84%;
-  left: 38.78%;
-  width: 61.22%;
-  height: 90.95%;
-  -webkit-mask: url('/assets/hero/logo-wordmark.svg') center / contain no-repeat;
-  mask: url('/assets/hero/logo-wordmark.svg') center / contain no-repeat;
-}
+  .cookbook-page .cuisine-card:nth-child(3) .cuisine-card__image-wrap img {
+    width: 198.9%;
+    height: 126.78%;
+    left: -61.71%;
+    top: 0.04%;
+  }
 
-/* Center the Back icon optically inside the 16px Figma row. Using a mask also
-   paints the existing cream Hero arrow in the correct green for this page. */
-.cookbook-page .back-link {
-  position: relative;
-  align-items: center;
-}
+  .cookbook-page .cuisine-card:nth-child(4) .cuisine-card__image-wrap img {
+    width: 198.9%;
+    height: 126.78%;
+    left: -19.76%;
+    top: -16.53%;
+  }
 
-.cookbook-page .back-link > img {
-  display: none !important;
-}
+  .cookbook-page .cuisine-card:nth-child(5) .cuisine-card__image-wrap img {
+    width: 244.46%;
+    height: 155.82%;
+    left: -73.46%;
+    top: -35.23%;
+  }
 
-.cookbook-page .back-link::before {
-  content: '';
-  display: block;
-  width: 20px;
-  height: 16px;
-  flex: 0 0 20px;
-  background: var(--middle-green);
-  transform: rotate(180deg);
-  transform-origin: center;
-  -webkit-mask: url('/assets/hero/arrow.svg') center / 20px 15px no-repeat;
-  mask: url('/assets/hero/arrow.svg') center / 20px 15px no-repeat;
+  .cookbook-page .cuisine-card:nth-child(6) .cuisine-card__image-wrap img {
+    width: 149.51%;
+    height: 112.31%;
+    left: -18.16%;
+    top: -5.54%;
+  }
+
+  .cookbook-page .cuisine-card:hover .cuisine-card__image-wrap img,
+  .cookbook-page .cuisine-card:focus-visible .cuisine-card__image-wrap img,
+  .cookbook-page .cuisine-card--selected .cuisine-card__image-wrap img {
+    transform: none !important;
+  }
 }
 
 @media (min-width: 1440px) {

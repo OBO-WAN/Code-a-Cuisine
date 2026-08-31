@@ -66,6 +66,25 @@ const layouts: readonly LayoutCase[] = [
   }
 ] as const;
 
+async function waitForDesignFonts(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('500 16px Quicksand'),
+      document.fonts.load('600 16px Quicksand')
+    ]);
+  });
+
+  await expect.poll(async () => page.evaluate(() =>
+    document.fonts.check('500 16px Quicksand')
+      && document.fonts.check('600 16px Quicksand')
+  ), {
+    timeout: 15_000,
+    intervals: [100, 150, 250, 500],
+    message: 'Quicksand did not finish loading before Generator geometry was measured.'
+  }).toBe(true);
+}
+
 async function readGeometry(page: Page): Promise<Geometry | null> {
   try {
     return await page.evaluate(() => {
@@ -143,6 +162,7 @@ for (const layout of layouts) {
       `Angular page errors: ${pageErrors.join(' | ') || 'none'}`
     ).toBeVisible({ timeout: 15_000 });
 
+    await waitForDesignFonts(page);
     await expect(page.getByRole('link', { name: 'Next step' })).toHaveCount(0);
 
     await expect.poll(async () => {
@@ -175,6 +195,7 @@ for (const layout of layouts) {
 
     const ingredientInput = page.locator('#ingredient-name');
     await expect(ingredientInput).toBeVisible({ timeout: 15_000 });
+    await waitForDesignFonts(page);
 
     await ingredientInput.fill('Pas');
 

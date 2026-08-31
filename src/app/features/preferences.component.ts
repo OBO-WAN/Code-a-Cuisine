@@ -10,13 +10,13 @@ import { RecipeApiService } from '../core/services/recipe-api.service';
 import { GenerationStateService } from '../core/services/generation-state.service';
 
 const PREFERENCE_ASSETS = {
-  minus: 'https://www.figma.com/api/mcp/asset/70e7007d-9915-4dd5-9a51-87e1eae2f353.svg',
-  plus: 'https://www.figma.com/api/mcp/asset/5c641811-f614-4ded-80f9-0f7d18bb3aed.svg',
-  backDesktop: 'https://www.figma.com/api/mcp/asset/05cd7041-b562-42f4-8c84-dce3f0d41144.svg',
-  backMobile: 'https://www.figma.com/api/mcp/asset/e6d60444-a5d7-4b5e-a88a-e62a216cf982.svg',
-  schedule: 'https://www.figma.com/api/mcp/asset/93fa497c-1ea6-4197-b5e1-966ed1bbbfcd.svg',
-  cuisine: 'https://www.figma.com/api/mcp/asset/ba982e01-1e02-45dc-ba87-e5064eefaffe.svg',
-  diet: 'https://www.figma.com/api/mcp/asset/e3200b0d-b9cb-4760-a0c7-c3d495a05d7a.svg'
+  minus: '/assets/preferences/minus.svg',
+  plus: '/assets/preferences/plus.svg',
+  backDesktop: '/assets/preferences/back-desktop.svg',
+  backMobile: '/assets/preferences/back-mobile.svg',
+  schedule: '/assets/preferences/schedule.svg',
+  cuisine: '/assets/preferences/cuisine.svg',
+  diet: '/assets/preferences/diet.svg'
 } as const;
 
 @Component({

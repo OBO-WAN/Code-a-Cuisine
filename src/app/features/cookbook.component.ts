@@ -2,120 +2,631 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  computed,
   inject,
   signal
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Cuisine, Recipe } from '../core/models/recipe.models';
 import { RecipeStoreService } from '../core/services/recipe-store.service';
-import { SiteHeaderComponent } from '../shared/site-header.component';
+
+type CookbookCategory = {
+  name: Cuisine;
+  label: string;
+  emoji: string;
+  image: string;
+  objectPosition: string;
+};
+
+type MostLikedRecipe = {
+  id?: string;
+  title: string;
+  cookingTimeMinutes: number;
+  likes: number;
+};
+
+const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
+  {
+    title: 'Pasta with spinach and cherry tomatoes',
+    cookingTimeMinutes: 20,
+    likes: 66
+  },
+  {
+    title: 'Low Carb Vegan No-Bake Paleo Bars',
+    cookingTimeMinutes: 35,
+    likes: 57
+  },
+  {
+    title: 'Schnitzel with fries',
+    cookingTimeMinutes: 35,
+    likes: 93
+  }
+];
 
 @Component({
   selector: 'app-cookbook',
-  imports: [RouterLink, SiteHeaderComponent],
+  imports: [RouterLink],
   template: `
-    <main class="page">
-      <app-site-header tone="cream" />
+    <main class="cookbook-page">
+      <header class="menu-bar">
+        <a routerLink="/" class="brand" aria-label="Code à Cuisine home">
+          <img class="brand__mark" src="/assets/hero/logo-mark.svg" alt="" />
+          <img class="brand__wordmark" src="/assets/hero/logo-wordmark.svg" alt="Code à Cuisine" />
+        </a>
 
-      <section class="content" aria-labelledby="cookbook-title">
-        <header>
-          <div>
+        <a routerLink="/" class="back-link">
+          <img src="/assets/hero/arrow.svg" alt="" aria-hidden="true" />
+          <span>Back</span>
+        </a>
+      </header>
+
+      <section class="cookbook-content" aria-labelledby="cookbook-title">
+        <section class="upper-panel">
+          <div class="cookbook-intro">
             <h1 id="cookbook-title">Cookbook</h1>
-            <p>Every generated recipe can become inspiration for the next meal.</p>
+            <p>
+              From quick bites to gourmet delights, explore them all in our ultimate cookbook and
+              get inspired for your next culinary adventure.
+            </p>
           </div>
 
-          <label>
-            <span>Filter by cuisine</span>
-            <select (change)="filterCuisine($event)">
-              <option value="">All cuisines</option>
-              @for (option of cuisines; track option) {
-                <option [value]="option">{{ option }}</option>
+          <div class="most-liked">
+            <div class="most-liked__heading">
+              <h2>Most liked recipes</h2>
+              <img [src]="icons.heart" alt="" aria-hidden="true" />
+            </div>
+
+            <div class="most-liked__rail" aria-label="Most liked recipes">
+              @for (recipe of mostLikedRecipes(); track recipe.id ?? recipe.title) {
+                <a
+                  class="liked-card"
+                  [routerLink]="recipe.id ? ['/recipe', recipe.id] : ['/cookbook']"
+                  [attr.aria-disabled]="recipe.id ? null : 'true'"
+                >
+                  <div class="liked-card__copy">
+                    <div class="liked-card__time">
+                      <img [src]="icons.clock" alt="" aria-hidden="true" />
+                      <span>Cooking time: {{ recipe.cookingTimeMinutes }}min</span>
+                    </div>
+                    <h3>{{ recipe.title }}</h3>
+                  </div>
+
+                  <span class="likes-pill" aria-label="{{ recipe.likes }} likes">
+                    <img [src]="icons.favorite" alt="" aria-hidden="true" />
+                    <span>{{ recipe.likes }}</span>
+                  </span>
+                </a>
               }
-            </select>
-          </label>
-        </header>
-
-        @if (loading()) {
-          <p class="status">Loading cookbook…</p>
-        } @else if (error()) {
-          <p class="status status--error" role="alert">{{ error() }}</p>
-        } @else if (recipes().length === 0) {
-          <section class="empty">
-            <h2>No recipes yet</h2>
-            <p>Generate the first recipes and they will appear here.</p>
-            <a routerLink="/generate">Generate recipes</a>
-          </section>
-        } @else {
-          <div class="grid">
-            @for (recipe of recipes(); track recipe.id ?? recipe.title) {
-              <article class="card">
-                <p class="meta">{{ recipe.cuisine }} · {{ recipe.cookingTimeMinutes }} min</p>
-                <h2>{{ recipe.title }}</h2>
-                <p>{{ recipe.diet === 'None' ? 'No dietary restriction' : recipe.diet }}</p>
-                <a [routerLink]="['/recipe', recipe.id]">View full recipe →</a>
-              </article>
-            }
+            </div>
           </div>
+        </section>
+
+        @if (error()) {
+          <p class="sr-only" role="status">
+            Live cookbook data is unavailable. Showing the design preview content instead.
+          </p>
         }
+
+        <section class="cuisine-grid" aria-label="Cuisine categories">
+          @for (category of categories; track category.name) {
+            <button
+              type="button"
+              class="cuisine-card"
+              [class.cuisine-card--selected]="selectedCuisine() === category.name"
+              (click)="selectCuisine(category.name)"
+            >
+              <span class="cuisine-card__title">
+                <span>{{ category.label }}</span>
+                <span aria-hidden="true">{{ category.emoji }}</span>
+              </span>
+              <span class="cuisine-card__image-wrap">
+                <img
+                  [src]="category.image"
+                  [alt]="category.label + ' inspiration'"
+                  [style.object-position]="category.objectPosition"
+                />
+              </span>
+            </button>
+          }
+        </section>
+
+        <a routerLink="/generate" class="generate-link">
+          <span>Generate new recipe</span>
+          <img src="/assets/hero/arrow.svg" alt="" aria-hidden="true" />
+        </a>
       </section>
     </main>
   `,
   styles: `
-    .page { min-height: 100dvh; color: var(--green-dark); background: #fff; }
-    .content { width: min(1330px, calc(100% - 32px)); margin: 64px auto 80px; }
-    header { display: flex; justify-content: space-between; align-items: end; gap: 32px; margin-bottom: 56px; }
-    h1 { margin: 0; font-size: 54px; color: var(--middle-green); }
-    header p { font-size: 20px; max-width: 520px; }
-    label { display: grid; gap: 8px; font-size: 16px; }
-    select { min-height: 42px; border: 1px solid color-mix(in srgb, var(--olive) 45%, transparent); border-radius: 8px; padding: 8px 12px; font: inherit; color: var(--green-dark); background: var(--cream); }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 44px 56px; }
-    .card { min-height: 300px; padding: 28px; border-radius: 20px; background: linear-gradient(180deg, color-mix(in srgb, var(--olive) 8%, white), color-mix(in srgb, var(--olive) 24%, white)); display: flex; flex-direction: column; }
-    .meta { font-size: 16px; }
-    .card h2 { font-size: 30px; line-height: 1.15; }
-    .card a { margin-top: auto; color: var(--middle-green); font-weight: 600; text-decoration: none; }
-    .status, .empty { text-align: center; padding: 80px 16px; }
-    .status--error { color: #8c1c13; }
-    .empty a { color: var(--middle-green); }
+    :host {
+      display: block;
+    }
 
-    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    .cookbook-page {
+      min-height: 100%;
+      overflow-x: clip;
+      color: var(--green-dark);
+      background: #fff;
+    }
+
+    .menu-bar {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 32px;
+      padding: 40px 40px 0 68px;
+    }
+
+    .brand {
+      position: relative;
+      display: block;
+      width: 142px;
+      height: 48px;
+      overflow: hidden;
+    }
+
+    .brand__mark,
+    .brand__wordmark {
+      position: absolute;
+      display: block;
+    }
+
+    .brand__mark {
+      inset: 0 64.69% 0 0;
+      width: 35.31%;
+      height: 100%;
+    }
+
+    .brand__wordmark {
+      top: 7.21%;
+      right: 0;
+      bottom: 1.84%;
+      left: 38.78%;
+      width: 61.22%;
+      height: 90.95%;
+    }
+
+    .back-link {
+      display: inline-flex;
+      height: 16px;
+      align-items: center;
+      gap: 10px;
+      color: var(--middle-green);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 10px;
+      text-decoration: none;
+    }
+
+    .back-link img {
+      width: 20px;
+      height: 15px;
+      transform: rotate(180deg);
+    }
+
+    .cookbook-content {
+      display: flex;
+      width: min(1330px, calc(100% - 110px));
+      margin: 64px auto 80px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 80px;
+    }
+
+    .upper-panel {
+      display: grid;
+      grid-template-columns: 454px minmax(0, 1fr);
+      align-items: end;
+      gap: 17px;
+      overflow: hidden;
+      padding: 40px 24px;
+      border-radius: 20px;
+      background: rgba(57, 96, 57, 0.04);
+    }
+
+    .cookbook-intro {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cookbook-intro h1 {
+      margin: 0;
+      color: var(--middle-green);
+      font-family: var(--font-body);
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 65px;
+    }
+
+    .cookbook-intro p {
+      margin: 0;
+      color: var(--green-dark);
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    .most-liked {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .most-liked__heading {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .most-liked__heading h2 {
+      margin: 0;
+      color: var(--middle-green);
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .most-liked__heading img {
+      width: 28px;
+      height: 26px;
+    }
+
+    .most-liked__rail {
+      display: flex;
+      width: 100%;
+      gap: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-right: 20px;
+      border-radius: 16px;
+      scrollbar-width: thin;
+      scroll-snap-type: x proximity;
+    }
+
+    .liked-card {
+      display: flex;
+      flex: 0 0 356px;
+      min-height: 124px;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 16px 12px;
+      border-radius: 16px;
+      color: inherit;
+      background: rgba(219, 224, 219, 0.7);
+      text-decoration: none;
+      scroll-snap-align: start;
+    }
+
+    .liked-card__copy {
+      display: flex;
+      width: 258px;
+      min-width: 0;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .liked-card__time {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--olive);
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 20px;
+    }
+
+    .liked-card__time img {
+      width: 24px;
+      height: 24px;
+    }
+
+    .liked-card h3 {
+      width: 263px;
+      max-width: 100%;
+      margin: 0;
+      color: var(--middle-green);
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.16;
+    }
+
+    .likes-pill {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 30px;
+      color: var(--green-dark);
+      background: rgba(57, 96, 57, 0.3);
+      font-family: 'Mulish', var(--font-body);
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .likes-pill img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .cuisine-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 400px);
+      justify-content: space-between;
+      gap: 52px 28px;
+    }
+
+    .cuisine-card {
+      display: flex;
+      width: 400px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 0;
+      border: 0;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .cuisine-card__title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--middle-green);
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .cuisine-card__image-wrap {
+      display: block;
+      width: 400px;
+      height: 400px;
+      overflow: hidden;
+      background: rgba(57, 96, 57, 0.06);
+    }
+
+    .cuisine-card__image-wrap img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 180ms ease;
+    }
+
+    .cuisine-card:hover .cuisine-card__image-wrap img,
+    .cuisine-card:focus-visible .cuisine-card__image-wrap img,
+    .cuisine-card--selected .cuisine-card__image-wrap img {
+      transform: scale(1.025);
+    }
+
+    .generate-link {
+      display: inline-flex;
+      align-self: flex-end;
+      height: 52px;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 26px;
+      border-radius: 5px;
+      color: var(--olive);
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 20px;
+      text-decoration: none;
+    }
+
+    .generate-link img {
+      width: 24px;
+      height: 15px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1240px) {
+      .upper-panel {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: 36px;
+      }
+
+      .cookbook-intro {
+        max-width: 560px;
+      }
+
+      .cuisine-grid {
+        grid-template-columns: repeat(2, minmax(0, 400px));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .menu-bar {
+        padding-right: 28px;
+        padding-left: 28px;
+      }
+
+      .cookbook-content {
+        width: calc(100% - 56px);
+      }
+
+      .cuisine-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .cuisine-card,
+      .cuisine-card__image-wrap {
+        width: 100%;
+      }
+
+      .cuisine-card__image-wrap {
+        height: auto;
+        aspect-ratio: 1;
+      }
+    }
+
     @media (max-width: 620px) {
-      .content { margin-top: 40px; }
-      header { align-items: stretch; flex-direction: column; }
-      .grid { grid-template-columns: 1fr; }
+      .menu-bar {
+        gap: 24px;
+        padding: 24px 20px 0;
+      }
+
+      .brand {
+        width: 118px;
+        height: 40px;
+      }
+
+      .cookbook-content {
+        width: calc(100% - 40px);
+        margin-top: 48px;
+        gap: 56px;
+      }
+
+      .upper-panel {
+        gap: 32px;
+        padding: 28px 20px;
+        border-radius: 16px;
+      }
+
+      .cookbook-intro h1 {
+        font-size: 48px;
+        line-height: 1;
+      }
+
+      .cookbook-intro p {
+        font-size: 19px;
+      }
+
+      .liked-card {
+        flex-basis: 300px;
+      }
+
+      .cuisine-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .cuisine-card__title {
+        font-size: 24px;
+      }
+
+      .generate-link {
+        align-self: flex-start;
+        padding-left: 0;
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CookbookComponent implements OnInit {
   private readonly store = inject(RecipeStoreService);
-  readonly cuisines: Cuisine[] = ['German', 'Italian', 'Japanese', 'Indian', 'Gourmet', 'Fusion'];
+
   readonly recipes = signal<Recipe[]>([]);
-  readonly loading = signal(true);
+  readonly selectedCuisine = signal<Cuisine | undefined>(undefined);
   readonly error = signal('');
 
-  /** Loads the newest recipe page from Firestore. */
+  readonly icons = {
+    clock: 'https://www.figma.com/api/mcp/asset/2d480034-7971-409b-9912-1645bc66620a.svg',
+    favorite: 'https://www.figma.com/api/mcp/asset/dfcfc424-02d1-4ec1-a089-736354cc3571.svg',
+    heart: 'https://www.figma.com/api/mcp/asset/cbe35565-ae3f-49de-bc97-5b791717288a.svg'
+  } as const;
+
+  readonly categories: CookbookCategory[] = [
+    {
+      name: 'Italian',
+      label: 'Italian cuisine',
+      emoji: '🤌',
+      image: 'https://www.figma.com/api/mcp/asset/b45ef269-275f-407f-be4c-1c7acbb08560.png',
+      objectPosition: '50% 50%'
+    },
+    {
+      name: 'German',
+      label: 'German cuisine',
+      emoji: '🥨',
+      image: 'https://www.figma.com/api/mcp/asset/80193f38-814f-428f-8dd0-a7226c04c9da.png',
+      objectPosition: '50% 50%'
+    },
+    {
+      name: 'Japanese',
+      label: 'Japanese cuisine',
+      emoji: '🥢',
+      image: 'https://www.figma.com/api/mcp/asset/dc1df6c6-4fcc-4603-ad0c-509710b1d79e.png',
+      objectPosition: '50% 50%'
+    },
+    {
+      name: 'Gourmet',
+      label: 'Gourmet cuisine',
+      emoji: '✨',
+      image: 'https://www.figma.com/api/mcp/asset/f1354d2d-d2e8-44ff-8394-9f57b7d7f738.png',
+      objectPosition: '50% 50%'
+    },
+    {
+      name: 'Indian',
+      label: 'Indian cuisine',
+      emoji: '🍛',
+      image: 'https://www.figma.com/api/mcp/asset/ddea254f-1760-47c6-9c6b-efa84243de07.png',
+      objectPosition: '50% 50%'
+    },
+    {
+      name: 'Fusion',
+      label: 'Fusion cuisine',
+      emoji: '🍢',
+      image: 'https://www.figma.com/api/mcp/asset/70f6ebe9-0732-4e2b-805a-4b75a8a3729a.png',
+      objectPosition: '50% 50%'
+    }
+  ];
+
+  readonly mostLikedRecipes = computed<MostLikedRecipe[]>(() => {
+    const live = [...this.recipes()]
+      .filter((recipe) => typeof recipe.likes === 'number')
+      .sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0))
+      .slice(0, 5)
+      .map((recipe) => ({
+        id: recipe.id,
+        title: recipe.title,
+        cookingTimeMinutes: recipe.cookingTimeMinutes,
+        likes: recipe.likes ?? 0
+      }));
+
+    return live.length > 0 ? live : FALLBACK_MOST_LIKED;
+  });
+
   ngOnInit(): void {
     void this.load();
   }
 
-  /** Applies the selected cuisine filter and reloads Firestore results. */
-  filterCuisine(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as Cuisine | '';
-    void this.load(value || undefined);
+  selectCuisine(cuisine: Cuisine): void {
+    this.selectedCuisine.set(cuisine);
+    void this.load(cuisine);
   }
 
-  /** Loads up to 20 recipes, matching the checklist pagination page size. */
   private async load(cuisine?: Cuisine): Promise<void> {
-    this.loading.set(true);
     this.error.set('');
 
     try {
       this.recipes.set(await this.store.listRecipes(20, cuisine));
     } catch (error: unknown) {
       console.error('Failed to load cookbook.', error);
-      this.error.set('Cookbook data is unavailable. Check your Firebase configuration.');
-    } finally {
-      this.loading.set(false);
+      this.recipes.set([]);
+      this.error.set('Cookbook data is unavailable.');
     }
   }
 }

@@ -61,10 +61,9 @@ const cases = [
     name: 'desktop',
     viewport: { width: 1440, height: 1024 },
     expected: {
-      contentWidth: 1330,
-      upperWidth: 1330,
-      cardWidth: 400,
-      imageWidth: 400,
+      contentMaxWidth: 1330,
+      horizontalInset: 110,
+      cardMaxWidth: 400,
       imageHeight: 400,
       brandWidth: 142,
       brandHeight: 48
@@ -74,10 +73,9 @@ const cases = [
     name: 'mobile',
     viewport: { width: 375, height: 812 },
     expected: {
-      contentWidth: 340,
-      upperWidth: 340,
-      cardWidth: 320,
-      imageWidth: 320,
+      contentMaxWidth: 340,
+      horizontalInset: 32,
+      cardMaxWidth: 320,
       imageHeight: 260,
       brandWidth: 95,
       brandHeight: 32
@@ -98,20 +96,32 @@ for (const layout of cases) {
       `Angular page errors: ${pageErrors.join(' | ') || 'none'}`
     ).toBeVisible({ timeout: 15_000 });
 
-    await expect.poll(async () => {
-      const geometry = await readGeometry(page);
-      if (!geometry) return false;
+    const matchesApprovedGeometry = (geometry: Geometry): boolean => {
+      // WebKit on Linux can reserve a classic vertical scrollbar gutter while
+      // Chromium uses overlay scrollbars. The design should use the same Figma
+      // max widths without creating horizontal overflow, so derive the rendered
+      // width from the actual CSS layout viewport (clientWidth).
+      const expectedContentWidth = Math.min(
+        layout.expected.contentMaxWidth,
+        geometry.clientWidth - layout.expected.horizontalInset
+      );
+      const expectedCardWidth = Math.min(layout.expected.cardMaxWidth, expectedContentWidth);
 
       return geometry.documentWidth <= geometry.clientWidth
         && geometry.bodyWidth <= geometry.clientWidth
-        && Math.abs(geometry.contentWidth - layout.expected.contentWidth) <= 1
-        && Math.abs(geometry.upperWidth - layout.expected.upperWidth) <= 1
-        && Math.abs(geometry.firstCardWidth - layout.expected.cardWidth) <= 1
-        && Math.abs(geometry.firstImageWidth - layout.expected.imageWidth) <= 1
+        && Math.abs(geometry.contentWidth - expectedContentWidth) <= 1
+        && Math.abs(geometry.upperWidth - expectedContentWidth) <= 1
+        && Math.abs(geometry.firstCardWidth - expectedCardWidth) <= 1
+        && Math.abs(geometry.firstImageWidth - expectedCardWidth) <= 1
         && Math.abs(geometry.firstImageHeight - layout.expected.imageHeight) <= 1
         && Math.abs(geometry.brandWidth - layout.expected.brandWidth) <= 1
         && Math.abs(geometry.brandHeight - layout.expected.brandHeight) <= 1
         && geometry.railScrollWidth > geometry.railClientWidth;
+    };
+
+    await expect.poll(async () => {
+      const geometry = await readGeometry(page);
+      return geometry ? matchesApprovedGeometry(geometry) : false;
     }, {
       timeout: 15_000,
       intervals: [100, 150, 250, 500],
@@ -123,14 +133,7 @@ for (const layout of cases) {
 
     if (geometry) {
       const diagnostics = JSON.stringify(geometry);
-      expect(geometry.documentWidth, diagnostics).toBeLessThanOrEqual(geometry.clientWidth);
-      expect(geometry.bodyWidth, diagnostics).toBeLessThanOrEqual(geometry.clientWidth);
-      expect(Math.abs(geometry.contentWidth - layout.expected.contentWidth), diagnostics).toBeLessThanOrEqual(1);
-      expect(Math.abs(geometry.upperWidth - layout.expected.upperWidth), diagnostics).toBeLessThanOrEqual(1);
-      expect(Math.abs(geometry.firstCardWidth - layout.expected.cardWidth), diagnostics).toBeLessThanOrEqual(1);
-      expect(Math.abs(geometry.firstImageWidth - layout.expected.imageWidth), diagnostics).toBeLessThanOrEqual(1);
-      expect(Math.abs(geometry.firstImageHeight - layout.expected.imageHeight), diagnostics).toBeLessThanOrEqual(1);
-      expect(geometry.railScrollWidth, diagnostics).toBeGreaterThan(geometry.railClientWidth);
+      expect(matchesApprovedGeometry(geometry), diagnostics).toBe(true);
     }
 
     await page.screenshot({

@@ -711,9 +711,9 @@ export class CookbookComponent implements OnInit {
   readonly error = signal('');
 
   readonly icons = {
-    clock: 'https://www.figma.com/api/mcp/asset/2d480034-7971-409b-9912-1645bc66620a.svg',
-    favorite: 'https://www.figma.com/api/mcp/asset/dfcfc424-02d1-4ec1-a089-736354cc3571.svg',
-    heart: 'https://www.figma.com/api/mcp/asset/cbe35565-ae3f-49de-bc97-5b791717288a.svg'
+    clock: '/assets/cookbook/clock.svg',
+    favorite: '/assets/cookbook/favorite.svg',
+    heart: '/assets/cookbook/heart.svg'
   } as const;
 
   readonly categories: CookbookCategory[] = [
@@ -721,42 +721,42 @@ export class CookbookComponent implements OnInit {
       name: 'Italian',
       label: 'Italian cuisine',
       emoji: '🤌',
-      image: 'https://www.figma.com/api/mcp/asset/b45ef269-275f-407f-be4c-1c7acbb08560.png',
+      image: '/assets/cookbook/italian.png',
       objectPosition: '50% 50%'
     },
     {
       name: 'German',
       label: 'German cuisine',
       emoji: '🥨',
-      image: 'https://www.figma.com/api/mcp/asset/80193f38-814f-428f-8dd0-a7226c04c9da.png',
+      image: '/assets/cookbook/german.png',
       objectPosition: '50% 50%'
     },
     {
       name: 'Japanese',
       label: 'Japanese cuisine',
       emoji: '🥢',
-      image: 'https://www.figma.com/api/mcp/asset/dc1df6c6-4fcc-4603-ad0c-509710b1d79e.png',
+      image: '/assets/cookbook/japanese.png',
       objectPosition: '50% 50%'
     },
     {
       name: 'Gourmet',
       label: 'Gourmet cuisine',
       emoji: '✨',
-      image: 'https://www.figma.com/api/mcp/asset/f1354d2d-d2e8-44ff-8394-9f57b7d7f738.png',
+      image: '/assets/cookbook/gourmet.png',
       objectPosition: '50% 50%'
     },
     {
       name: 'Indian',
       label: 'Indian cuisine',
       emoji: '🍛',
-      image: 'https://www.figma.com/api/mcp/asset/ddea254f-1760-47c6-9c6b-efa84243de07.png',
+      image: '/assets/cookbook/indian.png',
       objectPosition: '50% 50%'
     },
     {
       name: 'Fusion',
       label: 'Fusion cuisine',
       emoji: '🍢',
-      image: 'https://www.figma.com/api/mcp/asset/70f6ebe9-0732-4e2b-805a-4b75a8a3729a.png',
+      image: '/assets/cookbook/fusion.png',
       objectPosition: '50% 50%'
     }
   ];

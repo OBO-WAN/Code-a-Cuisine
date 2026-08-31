@@ -13,7 +13,8 @@
     "test:e2e:report": "playwright show-report",
     "vendor:hero-assets": "node scripts/vendor-hero-assets.mjs",
     "vendor:cookbook-assets": "node scripts/vendor-cookbook-assets.mjs",
-    "vendor:generator-assets": "node scripts/vendor-generator-assets.mjs"
+    "vendor:generator-assets": "node scripts/vendor-generator-assets.mjs",
+    "vendor:preferences-assets": "node scripts/vendor-preferences-assets.mjs"
   },
   "dependencies": {
     "@angular/common": "^22.1.4",

@@ -18,6 +18,27 @@ type Geometry = {
   backHeight: number;
 };
 
+async function waitForDesignFonts(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('500 16px Quicksand'),
+      document.fonts.load('600 16px Quicksand'),
+      document.fonts.load('500 16px Mulish')
+    ]);
+  });
+
+  await expect.poll(async () => page.evaluate(() =>
+    document.fonts.check('500 16px Quicksand')
+      && document.fonts.check('600 16px Quicksand')
+      && document.fonts.check('500 16px Mulish')
+  ), {
+    timeout: 15_000,
+    intervals: [100, 150, 250, 500],
+    message: 'Cookbook design fonts did not finish loading before geometry was measured.'
+  }).toBe(true);
+}
+
 async function readGeometry(page: Page): Promise<Geometry | null> {
   try {
     return await page.evaluate(() => {
@@ -95,6 +116,8 @@ for (const layout of cases) {
       page.getByRole('heading', { name: 'Cookbook', level: 1 }),
       `Angular page errors: ${pageErrors.join(' | ') || 'none'}`
     ).toBeVisible({ timeout: 15_000 });
+
+    await waitForDesignFonts(page);
 
     const matchesApprovedGeometry = (geometry: Geometry): boolean => {
       // Cookbook is intentionally taller than the viewport. On Linux WebKit a

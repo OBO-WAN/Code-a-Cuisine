@@ -507,14 +507,18 @@ export class LoadingComponent implements OnInit {
   private isInsufficientQuantityError(error: unknown): boolean {
     if (error instanceof HttpErrorResponse) {
       const payload = error.error;
-      const code = typeof payload === 'object' && payload !== null
-        ? String(payload.code ?? payload.error?.code ?? '')
-        : '';
+      const record = typeof payload === 'object' && payload !== null
+        ? payload as Record<string, unknown>
+        : null;
+      const nestedError = record
+        && typeof record['error'] === 'object'
+        && record['error'] !== null
+          ? record['error'] as Record<string, unknown>
+          : null;
+      const code = String(record?.['code'] ?? nestedError?.['code'] ?? '');
       const message = typeof payload === 'string'
         ? payload
-        : typeof payload === 'object' && payload !== null
-          ? String(payload.message ?? payload.error?.message ?? '')
-          : '';
+        : String(record?.['message'] ?? nestedError?.['message'] ?? '');
 
       return code === 'INSUFFICIENT_QUANTITY'
         || message.includes('INSUFFICIENT_QUANTITY');

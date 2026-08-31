@@ -43,6 +43,10 @@ export default defineConfig({
     },
     {
       name: 'webkit',
+      // CI already retries once globally. Mirror that locally for WebKit only
+      // because the Linux WebKit process can occasionally miss Angular's first
+      // boot even when the same built files pass immediately on retry.
+      retries: 1,
       use: { ...devices['Desktop Safari'] }
     }
   ]

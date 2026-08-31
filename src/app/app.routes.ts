@@ -21,6 +21,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'loading',
+    loadComponent: () =>
+      import('./features/loading.component').then(
+        (module) => module.LoadingComponent
+      )
+  },
+  {
     path: 'results',
     loadComponent: () =>
       import('./features/results.component').then(

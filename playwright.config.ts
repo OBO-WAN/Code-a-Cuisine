@@ -23,13 +23,14 @@ export default defineConfig({
     screenshot: 'only-on-failure'
   },
   webServer: {
-    // Keep Playwright isolated from the developer's normal `npm start` server on
-    // port 4200. Reusing that HMR-enabled server can reload WebKit while a test
-    // is measuring the page and destroy its JavaScript execution context.
-    command: 'npm start -- --host 127.0.0.1 --port 4300 --live-reload=false --hmr=false',
+    // Visual-regression checks should run against deterministic built files,
+    // not the Angular dev server. The dev server can rebuild between WebKit
+    // tests even with HMR disabled, which occasionally leaves a fresh page
+    // without Angular bootstrapped when geometry is measured.
+    command: 'npm run build:prod && node scripts/serve-e2e.mjs',
     url: e2eUrl,
     reuseExistingServer: false,
-    timeout: 120_000
+    timeout: 180_000
   },
   projects: [
     {

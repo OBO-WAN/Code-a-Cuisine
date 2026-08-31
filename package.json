@@ -14,7 +14,8 @@
     "vendor:hero-assets": "node scripts/vendor-hero-assets.mjs",
     "vendor:cookbook-assets": "node scripts/vendor-cookbook-assets.mjs",
     "vendor:generator-assets": "node scripts/vendor-generator-assets.mjs",
-    "vendor:preferences-assets": "node scripts/vendor-preferences-assets.mjs"
+    "vendor:preferences-assets": "node scripts/vendor-preferences-assets.mjs",
+    "wire:loading-flow": "node scripts/wire-loading-flow.mjs"
   },
   "dependencies": {
     "@angular/common": "^22.1.4",

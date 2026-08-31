@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 type Geometry = {
   innerWidth: number;
@@ -18,7 +18,7 @@ type Geometry = {
   backHeight: number;
 };
 
-async function readGeometry(page: Parameters<typeof test>[0] extends never ? never : any): Promise<Geometry | null> {
+async function readGeometry(page: Page): Promise<Geometry | null> {
   try {
     return await page.evaluate(() => {
       const content = document.querySelector<HTMLElement>('.cookbook-content');
@@ -93,8 +93,10 @@ for (const layout of cases) {
     await page.setViewportSize(layout.viewport);
     await page.goto('/cookbook', { waitUntil: 'domcontentloaded' });
 
-    await expect(page.getByRole('heading', { name: 'Cookbook', level: 1 }), `Angular page errors: ${pageErrors.join(' | ') || 'none'}`)
-      .toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.getByRole('heading', { name: 'Cookbook', level: 1 }),
+      `Angular page errors: ${pageErrors.join(' | ') || 'none'}`
+    ).toBeVisible({ timeout: 15_000 });
 
     await expect.poll(async () => {
       const geometry = await readGeometry(page);

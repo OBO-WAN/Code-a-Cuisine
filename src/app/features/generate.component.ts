@@ -413,6 +413,15 @@ const INGREDIENT_SUGGESTIONS = [
       cursor: pointer;
     }
 
+    .add-button:focus {
+      outline: none;
+    }
+
+    .add-button:focus-visible {
+      outline: 2px solid rgba(30, 85, 21, 0.55);
+      outline-offset: 2px;
+    }
+
     .add-button img {
       display: block;
       width: 24px;
@@ -680,10 +689,10 @@ export class GenerateComponent {
   ];
 
   readonly icons = {
-    add: 'https://www.figma.com/api/mcp/asset/57309082-99dd-4a2d-8a1b-b7d83b7e03fb.svg',
-    dropdown: 'https://www.figma.com/api/mcp/asset/c3485686-1ce5-48a5-a99c-564a14788a63.svg',
-    edit: 'https://www.figma.com/api/mcp/asset/9e3f9afb-0b7a-416c-af75-a885e23c1900.svg',
-    delete: 'https://www.figma.com/api/mcp/asset/6e2df522-d233-4cc4-84a0-55ed331711ba.svg'
+    add: '/assets/generator/add.svg',
+    dropdown: '/assets/generator/dropdown.svg',
+    edit: '/assets/generator/edit.svg',
+    delete: '/assets/generator/delete.svg'
   } as const;
 
   readonly ingredients = this.state.ingredients;

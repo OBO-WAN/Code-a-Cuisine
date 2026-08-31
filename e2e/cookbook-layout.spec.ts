@@ -97,18 +97,19 @@ for (const layout of cases) {
     ).toBeVisible({ timeout: 15_000 });
 
     const matchesApprovedGeometry = (geometry: Geometry): boolean => {
-      // WebKit on Linux can reserve a classic vertical scrollbar gutter while
-      // Chromium uses overlay scrollbars. The design should use the same Figma
-      // max widths without creating horizontal overflow, so derive the rendered
-      // width from the actual CSS layout viewport (clientWidth).
+      // Cookbook is intentionally taller than the viewport. On Linux WebKit a
+      // classic vertical scrollbar can reduce documentElement.clientWidth by
+      // 16px even though CSS layout still uses window.innerWidth. Because
+      // vertical scrolling is allowed here, use innerWidth for Figma widths
+      // and for detecting genuine horizontal overflow.
       const expectedContentWidth = Math.min(
         layout.expected.contentMaxWidth,
-        geometry.clientWidth - layout.expected.horizontalInset
+        geometry.innerWidth - layout.expected.horizontalInset
       );
       const expectedCardWidth = Math.min(layout.expected.cardMaxWidth, expectedContentWidth);
 
-      return geometry.documentWidth <= geometry.clientWidth
-        && geometry.bodyWidth <= geometry.clientWidth
+      return geometry.documentWidth <= geometry.innerWidth
+        && geometry.bodyWidth <= geometry.innerWidth
         && Math.abs(geometry.contentWidth - expectedContentWidth) <= 1
         && Math.abs(geometry.upperWidth - expectedContentWidth) <= 1
         && Math.abs(geometry.firstCardWidth - expectedCardWidth) <= 1

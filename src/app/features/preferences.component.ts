@@ -76,13 +76,13 @@ const PREFERENCE_ASSETS = {
           </section>
 
           <section class="preferences-card" aria-label="Recipe preferences">
-            <fieldset class="preference preference--time">
-              <legend>
+            <section class="preference preference--time" aria-labelledby="cooking-time-title">
+              <h2 id="cooking-time-title" class="preference__heading">
                 <span class="preference__icon preference__icon--schedule" aria-hidden="true">
                   <img [src]="assets.schedule" alt="" />
                 </span>
                 <span>Cooking time:</span>
-              </legend>
+              </h2>
 
               <div class="time-options">
                 @for (option of timeOptions; track option.value) {
@@ -100,15 +100,15 @@ const PREFERENCE_ASSETS = {
                   </div>
                 }
               </div>
-            </fieldset>
+            </section>
 
-            <fieldset class="preference preference--cuisine">
-              <legend>
+            <section class="preference preference--cuisine" aria-labelledby="cuisine-title">
+              <h2 id="cuisine-title" class="preference__heading">
                 <span class="preference__icon" aria-hidden="true">
                   <img [src]="assets.cuisine" alt="" />
                 </span>
                 <span>Cuisine</span>
-              </legend>
+              </h2>
 
               <div class="tags tags--cuisine">
                 @for (option of cuisines; track option) {
@@ -123,15 +123,15 @@ const PREFERENCE_ASSETS = {
                   </button>
                 }
               </div>
-            </fieldset>
+            </section>
 
-            <fieldset class="preference preference--diet">
-              <legend>
+            <section class="preference preference--diet" aria-labelledby="diet-title">
+              <h2 id="diet-title" class="preference__heading">
                 <span class="preference__icon" aria-hidden="true">
                   <img [src]="assets.diet" alt="" />
                 </span>
                 <span>Diet preferences</span>
-              </legend>
+              </h2>
 
               <div class="tags tags--diet">
                 @for (option of diets; track option) {
@@ -146,12 +146,17 @@ const PREFERENCE_ASSETS = {
                   </button>
                 }
               </div>
-            </fieldset>
+            </section>
           </section>
         </div>
 
         <button class="generate" type="button" [disabled]="loading()" (click)="generate()">
-          {{ loading() ? 'Generating ...' : 'Generate a recipe' }}
+          @if (loading()) {
+            <span>Generating ...</span>
+          } @else {
+            <span class="generate__desktop-label">Generate a recipe</span>
+            <span class="generate__mobile-label">Generate recipe</span>
+          }
         </button>
 
         @if (error()) {
@@ -165,6 +170,12 @@ const PREFERENCE_ASSETS = {
       display: block;
     }
 
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
     .preferences-page {
       min-height: 100dvh;
       overflow-x: clip;
@@ -176,6 +187,7 @@ const PREFERENCE_ASSETS = {
 
     .preferences-header {
       width: min(1440px, 100%);
+      height: 136px;
       margin-inline: auto;
       padding: 40px 40px 0 68px;
       display: flex;
@@ -189,6 +201,7 @@ const PREFERENCE_ASSETS = {
       display: block;
       width: 142px;
       height: 48px;
+      flex: 0 0 48px;
       overflow: hidden;
     }
 
@@ -270,7 +283,7 @@ const PREFERENCE_ASSETS = {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 56px;
+      gap: 32px;
     }
 
     .first-group {
@@ -284,16 +297,18 @@ const PREFERENCE_ASSETS = {
     h1 {
       width: 416px;
       max-width: 100%;
+      height: 35px;
       margin: 0;
       color: var(--green-dark);
       font-size: 28px;
       font-weight: 600;
-      line-height: 1;
+      line-height: 35px;
       text-align: center;
     }
 
     .adjustments {
       width: 100%;
+      height: 69px;
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -309,14 +324,16 @@ const PREFERENCE_ASSETS = {
 
     .adjustment--portions {
       width: 290px;
+      height: 67px;
     }
 
     .adjustment--chefs {
       width: 263px;
+      height: 69px;
     }
 
     .adjustment p {
-      min-width: 100%;
+      width: 100%;
       margin: 0;
       color: var(--green-dark);
       font-size: 20px;
@@ -324,7 +341,16 @@ const PREFERENCE_ASSETS = {
       line-height: 20px;
     }
 
+    .adjustment--portions p {
+      height: 23px;
+    }
+
+    .adjustment--chefs p {
+      height: 25px;
+    }
+
     .counter {
+      height: 28px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -347,6 +373,7 @@ const PREFERENCE_ASSETS = {
     }
 
     .counter strong {
+      width: 22px;
       min-width: 22px;
       height: 20px;
       padding: 0 5px 1px;
@@ -360,15 +387,17 @@ const PREFERENCE_ASSETS = {
     }
 
     .counter__label {
+      height: 19px;
       min-width: 69px;
       font-size: 20px;
       font-weight: 500;
-      line-height: 20px;
+      line-height: 19px;
     }
 
     .preferences-card {
-      width: 100%;
-      padding: 32px 24px;
+      width: 721px;
+      height: 412px;
+      padding: 32px 0;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -378,37 +407,55 @@ const PREFERENCE_ASSETS = {
     }
 
     .preference {
-      width: 100%;
-      padding: 0;
-      margin: 0;
-      border: 0;
+      flex: 0 0 auto;
+      margin-left: 24px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 24px;
     }
 
-    .preference legend {
-      padding: 0;
+    .preference--time {
+      width: 335px;
+      height: 104px;
+    }
+
+    .preference--cuisine {
+      width: 673px;
+      height: 82px;
+    }
+
+    .preference--diet {
+      width: 510px;
+      height: 82px;
+    }
+
+    .preference__heading {
+      width: auto;
+      height: 30px;
+      margin: 0;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 2px;
       color: var(--green-dark);
       font-size: 24px;
       font-weight: 500;
-      line-height: 1;
+      line-height: 30px;
+      white-space: nowrap;
     }
 
     .preference__icon {
+      position: relative;
       width: 24px;
       height: 24px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      margin-top: 3px;
+      display: inline-block;
       flex: 0 0 24px;
     }
 
     .preference__icon img {
+      position: absolute;
+      inset: 0;
       display: block;
       width: 24px;
       height: 24px;
@@ -421,13 +468,18 @@ const PREFERENCE_ASSETS = {
 
     .time-options,
     .tags {
-      width: 100%;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
+    }
+
+    .time-options {
+      width: 335px;
+      height: 50px;
       gap: 20px;
     }
 
     .time-option {
+      height: 50px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -440,12 +492,18 @@ const PREFERENCE_ASSETS = {
 
     .time-option > span {
       width: 100%;
+      height: 10px;
       color: var(--middle-green);
       font-size: 14px;
       font-weight: 500;
       line-height: 10px;
       text-align: center;
       white-space: nowrap;
+    }
+
+    .tags {
+      height: 28px;
+      gap: 20px;
     }
 
     .tag {
@@ -468,13 +526,32 @@ const PREFERENCE_ASSETS = {
 
     .tag--active {
       border-color: var(--middle-green);
-      box-shadow: inset 0 0 0 1px var(--middle-green);
     }
 
+    .time-option .tag {
+      width: 100%;
+    }
+
+    .tags--cuisine .tag:nth-child(1) { width: 100px; }
+    .tags--cuisine .tag:nth-child(2) { width: 82px; }
+    .tags--cuisine .tag:nth-child(3) { width: 82px; }
+    .tags--cuisine .tag:nth-child(4) { width: 117px; }
+    .tags--cuisine .tag:nth-child(5) { width: 107px; }
+    .tags--cuisine .tag:nth-child(6) { width: 85px; }
+
+    .tags--diet .tag:nth-child(1) { width: 128px; }
+    .tags--diet .tag:nth-child(2) { width: 85px; }
+    .tags--diet .tag:nth-child(3) { width: 68px; }
+    .tags--diet .tag:nth-child(4) { width: 169px; }
+
     .generate {
-      min-height: 62px;
-      padding: 16px 26px;
+      width: 258px;
+      height: 62px;
+      padding: 0;
       border: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: var(--olive);
       color: var(--cream);
       font: inherit;
@@ -482,6 +559,10 @@ const PREFERENCE_ASSETS = {
       font-weight: 600;
       line-height: 1;
       cursor: pointer;
+    }
+
+    .generate__mobile-label {
+      display: none;
     }
 
     .generate:disabled {
@@ -497,12 +578,9 @@ const PREFERENCE_ASSETS = {
     }
 
     @media (max-width: 700px) {
-      .preferences-page {
-        padding-bottom: 40px;
-      }
-
       .preferences-header {
         width: min(375px, 100%);
+        height: 80px;
         padding: 12px 16px 0;
         gap: 16px;
       }
@@ -510,6 +588,7 @@ const PREFERENCE_ASSETS = {
       .brand {
         width: 95px;
         height: 32px;
+        flex-basis: 32px;
       }
 
       .back {
@@ -537,31 +616,45 @@ const PREFERENCE_ASSETS = {
       }
 
       .content__without-cta {
+        width: 340px;
+        max-width: 100%;
         gap: 32px;
       }
 
       .first-group {
-        width: 291px;
-        max-width: 100%;
+        width: 100%;
+        height: 198px;
         align-items: flex-start;
         gap: 24px;
       }
 
       h1 {
         width: 291px;
+        height: 30px;
         font-size: 24px;
+        line-height: 30px;
         text-align: left;
       }
 
       .adjustments {
-        width: auto;
+        width: 290px;
+        height: 144px;
         flex-direction: column;
+        justify-content: flex-start;
         align-items: flex-start;
         gap: 24px;
       }
 
       .adjustment {
         gap: 8px;
+      }
+
+      .adjustment--portions {
+        height: 59px;
+      }
+
+      .adjustment--chefs {
+        height: 61px;
       }
 
       .adjustment p {
@@ -571,41 +664,75 @@ const PREFERENCE_ASSETS = {
 
       .counter__label {
         font-size: 18px;
-        line-height: 1;
+        line-height: 19px;
       }
 
       .preferences-card {
         width: 340px;
-        max-width: 100%;
-        padding: 32px 24px;
+        height: 544px;
+        padding: 32px 0;
         align-items: center;
         gap: 40px;
       }
 
       .preference {
-        width: 300px;
-        max-width: 100%;
+        margin-left: 0;
       }
 
-      .preference legend {
+      .preference--time {
+        width: 311px;
+        height: 104px;
+      }
+
+      .preference--cuisine {
+        width: 300px;
+        height: 170px;
+      }
+
+      .preference--diet {
+        width: 300px;
+        height: 126px;
+      }
+
+      .preference__heading {
+        height: 30px;
         font-size: 24px;
         font-weight: 600;
+        line-height: 30px;
       }
 
       .time-options {
+        width: 311px;
         gap: 8px;
       }
 
       .tags {
+        width: 300px;
+        height: auto;
         flex-wrap: wrap;
         gap: 16px;
       }
 
+      .tags--cuisine {
+        height: 116px;
+      }
+
+      .tags--diet {
+        height: 72px;
+      }
+
       .generate {
+        width: 155px;
         height: 52px;
-        min-height: 52px;
-        padding: 4px 16px;
         font-size: 16px;
+      }
+
+      .generate__desktop-label {
+        display: none;
+      }
+
+      .generate__mobile-label {
+        display: inline;
       }
 
       .error {
@@ -637,17 +764,14 @@ export class PreferencesComponent {
   readonly loading = signal(false);
   readonly error = signal('');
 
-  /** Adjusts portions while enforcing the checklist range of 1–12. */
   changePortions(delta: number): void {
     this.portions.update((current) => Math.min(12, Math.max(1, current + delta)));
   }
 
-  /** Adjusts cooking helpers while enforcing the checklist range of 1–3. */
   changePeople(delta: number): void {
     this.cookingPeople.update((current) => Math.min(3, Math.max(1, current + delta)));
   }
 
-  /** Sends the complete generation request to n8n and navigates to results. */
   generate(): void {
     if (this.state.ingredients().length === 0 || this.loading()) {
       void this.router.navigate(['/generate']);

@@ -18,19 +18,15 @@ type Geometry = {
   backHeight: number;
 };
 
-async function waitForDesignFonts(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    await document.fonts.ready;
-
-    // Remote Google Fonts are a visual enhancement, not a prerequisite for
-    // deterministic box geometry. Local Playwright WebKit can reject these
-    // requests with NetworkError even while the same revision passes in CI.
-    await Promise.allSettled([
-      document.fonts.load('500 16px Quicksand'),
-      document.fonts.load('600 16px Quicksand'),
-      document.fonts.load('500 16px Mulish')
-    ]);
-  });
+async function blockExternalFonts(page: Page): Promise<void> {
+  // The production app intentionally loads its design fonts from Google, but
+  // visual geometry checks must not depend on an external network request.
+  // Local Linux WebKit can otherwise hang or fail during stylesheet/font
+  // loading before Angular has a chance to render the page.
+  await page.route(
+    /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\//,
+    route => route.abort()
+  );
 }
 
 async function readGeometry(page: Page): Promise<Geometry | null> {
@@ -103,6 +99,7 @@ for (const layout of cases) {
     const pageErrors: string[] = [];
     page.on('pageerror', error => pageErrors.push(error.message));
 
+    await blockExternalFonts(page);
     await page.setViewportSize(layout.viewport);
     await page.goto('/cookbook', { waitUntil: 'domcontentloaded' });
 
@@ -110,8 +107,6 @@ for (const layout of cases) {
       page.getByRole('heading', { name: 'Cookbook', level: 1 }),
       `Angular page errors: ${pageErrors.join(' | ') || 'none'}`
     ).toBeVisible({ timeout: 15_000 });
-
-    await waitForDesignFonts(page);
 
     const matchesApprovedGeometry = (geometry: Geometry): boolean => {
       // Cookbook is intentionally taller than the viewport. On Linux WebKit a

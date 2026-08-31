@@ -32,6 +32,18 @@ export class GenerationStateService {
     this.ingredients.update((items) => [normalized, ...items]);
   }
 
+  /** Replaces one existing ingredient while preserving its list position. */
+  updateIngredient(index: number, ingredient: Ingredient): void {
+    const normalized = {
+      ...ingredient,
+      name: ingredient.name.trim()
+    };
+
+    this.ingredients.update((items) =>
+      items.map((item, i) => (i === index ? normalized : item))
+    );
+  }
+
   /** Removes an ingredient by its current list index. */
   removeIngredient(index: number): void {
     this.ingredients.update((items) => items.filter((_, i) => i !== index));

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const desktopViewports = [
   { width: 1440, height: 1024 },
@@ -7,11 +7,22 @@ const desktopViewports = [
   { width: 1366, height: 768 }
 ] as const;
 
+async function blockExternalFonts(page: Page): Promise<void> {
+  // The production app intentionally loads its design fonts from Google, but
+  // viewport checks must not depend on an external network request. Local
+  // Linux WebKit can otherwise stall before Angular renders the hero at all.
+  await page.route(
+    /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\//,
+    route => route.abort()
+  );
+}
+
 for (const viewport of desktopViewports) {
   test(`hero fits ${viewport.width}x${viewport.height} without scrollbars`, async ({ page }, testInfo) => {
     const pageErrors: string[] = [];
     page.on('pageerror', error => pageErrors.push(error.message));
 
+    await blockExternalFonts(page);
     await page.setViewportSize(viewport);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 

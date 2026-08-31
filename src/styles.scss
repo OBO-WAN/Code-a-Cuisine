@@ -61,6 +61,69 @@ select:focus-visible {
   outline-offset: 3px;
 }
 
+/* The Hero logo assets are cream because they sit on the green Hero. The
+   Cookbook reuses the exact same vector geometry on white, so use the SVGs as
+   masks and paint them in the Figma olive instead of duplicating logo files. */
+.cookbook-page .brand {
+  position: relative;
+}
+
+.cookbook-page .brand__mark,
+.cookbook-page .brand__wordmark {
+  visibility: hidden !important;
+}
+
+.cookbook-page .brand::before,
+.cookbook-page .brand::after {
+  content: '';
+  position: absolute;
+  display: block;
+  background: var(--olive);
+}
+
+.cookbook-page .brand::before {
+  inset: 0 64.69% 0 0;
+  width: 35.31%;
+  height: 100%;
+  -webkit-mask: url('/assets/hero/logo-mark.svg') center / contain no-repeat;
+  mask: url('/assets/hero/logo-mark.svg') center / contain no-repeat;
+}
+
+.cookbook-page .brand::after {
+  top: 7.21%;
+  right: 0;
+  bottom: 1.84%;
+  left: 38.78%;
+  width: 61.22%;
+  height: 90.95%;
+  -webkit-mask: url('/assets/hero/logo-wordmark.svg') center / contain no-repeat;
+  mask: url('/assets/hero/logo-wordmark.svg') center / contain no-repeat;
+}
+
+/* Center the Back icon optically inside the 16px Figma row. Using a mask also
+   paints the existing cream Hero arrow in the correct green for this page. */
+.cookbook-page .back-link {
+  position: relative;
+  align-items: center;
+}
+
+.cookbook-page .back-link > img {
+  display: none !important;
+}
+
+.cookbook-page .back-link::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 16px;
+  flex: 0 0 20px;
+  background: var(--middle-green);
+  transform: rotate(180deg);
+  transform-origin: center;
+  -webkit-mask: url('/assets/hero/arrow.svg') center / 20px 15px no-repeat;
+  mask: url('/assets/hero/arrow.svg') center / 20px 15px no-repeat;
+}
+
 @media (min-width: 1440px) {
   body {
     background: linear-gradient(90deg, color-mix(in srgb, var(--olive) 7%, white), #fff 18% 82%, color-mix(in srgb, var(--olive) 7%, white));

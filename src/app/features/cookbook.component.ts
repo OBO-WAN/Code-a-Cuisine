@@ -50,13 +50,13 @@ const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
     <main class="cookbook-page">
       <header class="menu-bar">
         <a routerLink="/" class="brand" aria-label="Code à Cuisine home">
-          <img class="brand__mark" src="/assets/hero/logo-mark.svg" alt="" />
-          <img class="brand__wordmark" src="/assets/hero/logo-wordmark.svg" alt="Code à Cuisine" />
+          <span class="brand__mark" aria-hidden="true"></span>
+          <span class="brand__wordmark" aria-hidden="true"></span>
         </a>
 
-        <a routerLink="/" class="back-link">
-          <img src="/assets/hero/arrow.svg" alt="" aria-hidden="true" />
-          <span>Back</span>
+        <a routerLink="/" class="back-link" aria-label="Back to home">
+          <span class="back-link__icon" aria-hidden="true"></span>
+          <span class="back-link__label">Back</span>
         </a>
       </header>
 
@@ -132,7 +132,7 @@ const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
 
         <a routerLink="/generate" class="generate-link">
           <span>Generate new recipe</span>
-          <img src="/assets/hero/arrow.svg" alt="" aria-hidden="true" />
+          <span class="generate-link__icon" aria-hidden="true"></span>
         </a>
       </section>
     </main>
@@ -167,15 +167,30 @@ const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
     }
 
     .brand__mark,
+    .brand__wordmark,
+    .back-link__icon,
+    .generate-link__icon {
+      display: block;
+      background: var(--olive);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+    }
+
+    .brand__mark,
     .brand__wordmark {
       position: absolute;
-      display: block;
     }
 
     .brand__mark {
       inset: 0 64.69% 0 0;
       width: 35.31%;
       height: 100%;
+      -webkit-mask-image: url('/assets/hero/logo-mark.svg');
+      mask-image: url('/assets/hero/logo-mark.svg');
     }
 
     .brand__wordmark {
@@ -185,6 +200,8 @@ const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
       left: 38.78%;
       width: 61.22%;
       height: 90.95%;
+      -webkit-mask-image: url('/assets/hero/logo-wordmark.svg');
+      mask-image: url('/assets/hero/logo-wordmark.svg');
     }
 
     .back-link {
@@ -199,10 +216,14 @@ const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
       text-decoration: none;
     }
 
-    .back-link img {
+    .back-link__icon {
       width: 20px;
       height: 15px;
+      flex: 0 0 auto;
+      background: var(--middle-green);
       transform: rotate(180deg);
+      -webkit-mask-image: url('/assets/hero/arrow.svg');
+      mask-image: url('/assets/hero/arrow.svg');
     }
 
     .cookbook-content {
@@ -425,9 +446,12 @@ const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
       text-decoration: none;
     }
 
-    .generate-link img {
+    .generate-link__icon {
       width: 24px;
       height: 15px;
+      flex: 0 0 auto;
+      -webkit-mask-image: url('/assets/hero/arrow.svg');
+      mask-image: url('/assets/hero/arrow.svg');
     }
 
     .sr-only {
@@ -484,53 +508,196 @@ const FALLBACK_MOST_LIKED: MostLikedRecipe[] = [
     }
 
     @media (max-width: 620px) {
+      .cookbook-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+        padding-bottom: 40px;
+      }
+
       .menu-bar {
-        gap: 24px;
-        padding: 24px 20px 0;
+        width: min(375px, 100%);
+        gap: 16px;
+        padding: 12px 16px 0;
       }
 
       .brand {
-        width: 118px;
-        height: 40px;
+        width: 95px;
+        height: 32px;
+      }
+
+      .back-link {
+        width: 32px;
+        height: 20px;
+        justify-content: center;
+        gap: 0;
+      }
+
+      .back-link__icon {
+        width: 20px;
+        height: 15px;
+      }
+
+      .back-link__label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
       }
 
       .cookbook-content {
-        width: calc(100% - 40px);
-        margin-top: 48px;
-        gap: 56px;
-      }
-
-      .upper-panel {
-        gap: 32px;
-        padding: 28px 20px;
-        border-radius: 16px;
-      }
-
-      .cookbook-intro h1 {
-        font-size: 48px;
-        line-height: 1;
-      }
-
-      .cookbook-intro p {
-        font-size: 19px;
-      }
-
-      .liked-card {
-        flex-basis: 300px;
-      }
-
-      .cuisine-grid {
-        grid-template-columns: 1fr;
+        width: min(340px, calc(100% - 32px));
+        margin: 0;
         gap: 40px;
       }
 
-      .cuisine-card__title {
+      .upper-panel {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 24px;
+        padding: 16px 10px;
+        border-radius: 20px;
+      }
+
+      .cookbook-intro {
+        width: 100%;
+        max-width: none;
+        gap: 16px;
+      }
+
+      .cookbook-intro h1 {
+        min-height: 44px;
+        font-size: 40px;
+        line-height: 44px;
+      }
+
+      .cookbook-intro p {
+        font-size: 18px;
+        line-height: 1.18;
+      }
+
+      .most-liked {
+        width: 100%;
+        gap: 16px;
+      }
+
+      .most-liked__heading {
+        gap: 16px;
+        align-items: center;
+      }
+
+      .most-liked__heading h2 {
         font-size: 24px;
+        line-height: 1;
+      }
+
+      .most-liked__heading img {
+        width: 21px;
+        height: 20px;
+      }
+
+      .most-liked__rail {
+        width: 100%;
+        gap: 12px;
+        padding-right: 0;
+        scrollbar-width: none;
+      }
+
+      .most-liked__rail::-webkit-scrollbar {
+        display: none;
+      }
+
+      .liked-card {
+        flex: 0 0 281px;
+        min-height: 106px;
+        gap: 16px;
+        padding: 16px 12px;
+      }
+
+      .liked-card__copy {
+        width: 195px;
+        gap: 8px;
+      }
+
+      .liked-card__time {
+        height: 20px;
+        font-size: 16px;
+        line-height: 20px;
+        white-space: nowrap;
+      }
+
+      .liked-card__time img {
+        width: 16px;
+        height: 16px;
+      }
+
+      .liked-card h3 {
+        width: 195px;
+        font-size: 18px;
+        line-height: 1.12;
+      }
+
+      .likes-pill {
+        padding: 2px 6px;
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 20px;
+      }
+
+      .likes-pill img {
+        width: 20px;
+        height: 20px;
+      }
+
+      .cuisine-grid {
+        display: flex;
+        width: 320px;
+        max-width: 100%;
+        flex-direction: column;
+        align-self: center;
+        gap: 24px;
+      }
+
+      .cuisine-card {
+        width: 320px;
+        max-width: 100%;
+        gap: 8px;
+      }
+
+      .cuisine-card__title {
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .cuisine-card__image-wrap {
+        width: 320px;
+        max-width: 100%;
+        height: 260px;
+        aspect-ratio: auto;
+      }
+
+      .cuisine-card__image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
 
       .generate-link {
-        align-self: flex-start;
-        padding-left: 0;
+        align-self: center;
+        height: 52px;
+        padding: 4px 16px;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .generate-link__icon {
+        width: 20px;
+        height: 15px;
       }
     }
   `,
